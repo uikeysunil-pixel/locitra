@@ -43,4 +43,4 @@ const watchMarketSchema = new mongoose.Schema(
 // Prevent a user watching the same keyword+city twice
 watchMarketSchema.index({ userId: 1, keyword: 1, city: 1 }, { unique: true })
 
-module.exports = mongoose.model("WatchMarket", watchMarketSchema)
+module.exports = mongoose.models.WatchMarket || mongoose.model("WatchMarket", watchMarketSchema)

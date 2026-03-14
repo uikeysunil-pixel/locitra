@@ -18,6 +18,4 @@ enrichmentCacheSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 // Compound index to find unique cache entries
 enrichmentCacheSchema.index({ businessName: 1, city: 1 }, { unique: true });
 
-const EnrichmentCache = mongoose.model('EnrichmentCache', enrichmentCacheSchema);
-
-module.exports = EnrichmentCache;
+module.exports = mongoose.models.EnrichmentCache || mongoose.model("EnrichmentCache", enrichmentCacheSchema);

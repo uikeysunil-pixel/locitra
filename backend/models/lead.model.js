@@ -32,4 +32,4 @@ const leadSchema = new mongoose.Schema({
 // Prevent duplicates: business name + location (city)
 leadSchema.index({ name: 1, city: 1 }, { unique: true });
 
-module.exports = mongoose.model("Lead", leadSchema)
+module.exports = mongoose.models.Lead || mongoose.model("Lead", leadSchema)

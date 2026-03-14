@@ -1,8 +1,11 @@
 const mongoose = require("mongoose")
 
 const scanCacheSchema = new mongoose.Schema({
+    queryKey: { type: String, unique: true, sparse: true },
     keyword: { type: String, required: true },
-    location: { type: String, required: true },
+    location: { type: String },
+    city: { type: String }, // Reconcile City vs Location
+    country: { type: String },
     results: { type: Array, required: true },
     createdAt: {
         type: Date,
@@ -13,7 +16,6 @@ const scanCacheSchema = new mongoose.Schema({
 
 // Performance optimization: Indexes for fast queries
 scanCacheSchema.index({ keyword: 1, location: 1 })
+scanCacheSchema.index({ keyword: 1, city: 1 })
 
-const ScanCache = mongoose.model("ScanCache", scanCacheSchema)
-
-module.exports = ScanCache
+module.exports = mongoose.models.ScanCache || mongoose.model("ScanCache", scanCacheSchema)

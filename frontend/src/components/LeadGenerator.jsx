@@ -13,7 +13,7 @@ export default function LeadGenerator() {
             try {
 
                 const response = await fetch(
-                    "http://localhost:5000/api/leads?keyword=dentist&location=chicago"
+                    `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/leads?keyword=dentist&location=chicago`
                 )
 
                 const data = await response.json()

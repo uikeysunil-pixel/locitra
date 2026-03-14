@@ -24,7 +24,7 @@ function OutreachModal({ lead, onClose }) {
             if (lead.rating > 0 && lead.rating < 4.0) trustSignals.push("Low rating");
             if (!lead.website) trustSignals.push("No website");
 
-            const res = await fetch("http://localhost:5000/api/outreach/generate", {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/outreach/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

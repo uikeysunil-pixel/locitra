@@ -39,7 +39,7 @@ export default function Billing() {
         setPaying(plan.id)
         try {
             const token = JSON.parse(localStorage.getItem("locitra-auth") || "{}")?.state?.token || ""
-            const res = await fetch(`http://localhost:5000/api/billing/${method}/create`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/billing/${method}/create`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify({ plan: plan.id, amount: plan.price })
@@ -69,7 +69,7 @@ export default function Billing() {
             description: `${plan.name} Plan — $${plan.price}/mo`,
             order_id: data.orderId,
             handler: async (response) => {
-                await fetch("http://localhost:5000/api/billing/razorpay/verify", {
+                await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/billing/razorpay/verify`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ ...response, plan: plan.id })

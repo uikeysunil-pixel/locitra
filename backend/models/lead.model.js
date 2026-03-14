@@ -29,4 +29,7 @@ const leadSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 })
 
+// Prevent duplicates: business name + location (city)
+leadSchema.index({ name: 1, city: 1 }, { unique: true });
+
 module.exports = mongoose.model("Lead", leadSchema)

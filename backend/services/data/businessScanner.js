@@ -53,10 +53,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     }
 
     console.log(`[businessScanner] SCAN REQUEST: ${keyword} ${city}`)
-    console.log("Checking cache for:", keyword, city)
-
-    const cacheLimit = new Date(Date.now() - 24 * 60 * 60 * 1000)
-
+    console.log("Checking MongoDB cache")
     const cachedBusinesses = await Business.find({
         keyword,
         city,
@@ -64,7 +61,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     }).lean()
 
     if (cachedBusinesses.length > 0) {
-        console.log("Using cached results:", cachedBusinesses.length)
+        console.log("Cache hit")
         return cachedBusinesses
     }
 
@@ -77,11 +74,11 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     })
 
     if (cached) {
-        console.log("[businessScanner] Using ScanCache results:", cached.results.length)
+        console.log("Cache hit")
         return cached.results
     }
 
-    console.log("Running fresh scan via SerpAPI")
+    console.log("Cache miss → calling SERP")
 
     const allBusinesses = []
     let start = 0
@@ -216,6 +213,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     const scannedBusinesses = deeplyEnriched
 
     try {
+        console.log("Saving leads")
         await Business.insertMany(
             scannedBusinesses.map(b => ({
                 ...b,

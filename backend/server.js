@@ -23,6 +23,7 @@ const billingRoutes = require("./routes/billing.routes")
 const freeScanRoutes = require("./routes/freeScan.routes")
 const watchMarketRoutes = require("./routes/watchMarket.routes")
 const enrichRoutes = require("./routes/enrich.routes")
+const systemRoutes = require("./routes/system.routes")
 
 // Validate critical environment variables
 const requiredEnv = ["MONGO_URI", "JWT_SECRET", "SERPAPI_KEY"]
@@ -49,7 +50,13 @@ app.get("/", (req, res) => {
 })
 
 // Middleware
-app.use(cors())
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://locitra.com"
+    ],
+    credentials: true
+}))
 app.use(express.json())
 
 // API Routes (Prefix all with /api)
@@ -71,6 +78,7 @@ app.use("/api/billing", billingRoutes)
 app.use("/api/free-scan", freeScanRoutes)
 app.use("/api/watch", watchMarketRoutes)
 app.use("/api/enrich", enrichRoutes)
+app.use("/api", systemRoutes)
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -3,7 +3,9 @@ import { useState, useEffect } from "react"
 import {
     fetchAlerts,
     fetchMarketGaps,
-    fetchAdvisor
+    fetchAdvisor,
+    scanMarket,
+    API_BASE
 } from "../services/api"
 
 import PageContainer from "../components/PageContainer"
@@ -59,7 +61,7 @@ export default function Search() {
             setLoading(true)
 
             const response = await fetch(
-                `http://localhost:5000/api/search?keyword=${keyword}&location=${location}`
+                `${API_BASE}/search?keyword=${keyword}&location=${location}`
             )
 
             const dashboardData = await response.json()
@@ -123,7 +125,7 @@ export default function Search() {
             setLoading(true)
 
             const response = await fetch(
-                `http://localhost:5000/api/scanner/scan-city?city=${location}`
+                `${API_BASE}/scanner/scan-city?city=${location}`
             )
 
             const result = await response.json()

@@ -53,7 +53,7 @@ export default function LeadGenerator() {
     const generateSingle = async (lead) => {
         try {
             setLoadingLead(lead.name)
-            const res = await fetch("http://localhost:5000/api/outreach/generate-outreach", {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/outreach/generate-outreach`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -81,7 +81,7 @@ export default function LeadGenerator() {
             const lead = businesses.find(b => b.name === name)
             if (!lead) continue
             try {
-                const res = await fetch("http://localhost:5000/api/outreach/generate-outreach", {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/outreach/generate-outreach`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({

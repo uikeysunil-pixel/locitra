@@ -59,8 +59,17 @@ exports.generateAudit = (business) => {
         Low: `This business is relatively well-optimised but could still benefit from improvements.`
     }
 
+    // Calculate seoScore based on flags and urgency
+    // Start at 100, subtract for each flag
+    let seoScore = 100 - (flags.length * 10);
+    if (urgency === "High") seoScore = Math.min(seoScore, 50);
+    else if (urgency === "Medium") seoScore = Math.min(seoScore, 75);
+    seoScore = Math.max(seoScore, 20);
+
     return {
-        flags,
+        seoScore,
+        issues: flags, // Matching required format
+        flags, // Keep for backward compatibility
         urgency,
         summary: summaryMap[urgency]
     }

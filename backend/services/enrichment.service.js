@@ -7,23 +7,24 @@ const { generateOutreach } = require('./ai/outreachGenerator');
 
 const SERPAPI_URL = "https://serpapi.com/search.json";
 
-async function enrichLead(business) {
+async function enrichLead(business, forceWebsiteDiscovery = false) {
     if (!business || !business.name || !business.city) return business;
 
-    console.log(`Running enrichment for: ${business.name} in ${business.city}`);
+    console.log(`[Enrichment] Processing: ${business.name} in ${business.city}`);
 
-    // STEP 2 — Update Lead Enrichment
-    if (!business.website) {
-        console.log(`Website missing for ${business.name}. Attempting discovery...`);
+    // If website discovery is explicitly requested and missing
+    if (forceWebsiteDiscovery && !business.website) {
+        console.log(`[Enrichment] Attempting website discovery for ${business.name}...`);
         const discovered = await discoverWebsite(business.name, business.city);
         if (discovered) {
             business.website = discovered;
         }
     }
 
-    // Enrichment requirement: If still no website, skip contact discovery and SEO
+    // Worker Constraint: If still no website, we skip contact discovery and SEO analysis 
+    // unless we want to process what we have.
     if (!business.website) {
-        console.log(`Skipping full enrichment for ${business.name}: No website discovered.`);
+        console.log(`[Enrichment] Skipping full enrichment for ${business.name}: No website.`);
         return business;
     }
 
@@ -35,7 +36,7 @@ async function enrichLead(business) {
     });
 
     if (cached) {
-        console.log(`Cache hit for enrichment: ${business.name}`);
+        console.log(`[Enrichment] Cache hit for ${business.name}`);
         business.email = business.email || cached.email;
         business.facebook = business.facebook || cached.facebook;
         business.instagram = business.instagram || cached.instagram;
@@ -44,14 +45,10 @@ async function enrichLead(business) {
         business.youtube = business.youtube || cached.youtube;
         business.tiktok = business.tiktok || cached.tiktok;
         business.contactPage = business.contactPage || cached.contactPage;
-        
-        // Even if we hit cache, we might still want to run SEO and Outreach 
-        // if they aren't in the cache model or if we want fresh AI output.
-        // Assuming we want to run them now as per pipeline rules.
     } else {
         // 2. Discover Contacts if email is missing
         if (!business.email) {
-            console.log(`Running contact finder for ${business.website}`);
+            console.log(`[Enrichment] Running contact finder for ${business.website}`);
             const { email, socials } = await contactFinder(business.website);
             
             business.email = email || business.email;
@@ -61,8 +58,6 @@ async function enrichLead(business) {
             business.twitter = socials.twitter || business.twitter;
             business.youtube = socials.youtube || business.youtube;
             business.tiktok = socials.tiktok || business.tiktok;
-        } else {
-            console.log(`Email already exists for ${business.name}, skipping contact discovery.`);
         }
 
         // 3. Cache results
@@ -81,23 +76,32 @@ async function enrichLead(business) {
                     contactPage: business.contactPage || "",
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
                 },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: "after" }
             );
         } catch (e) {
-            console.error("Enrichment Cache Save Error:", e.message);
+            console.error("[Enrichment] Cache Save Error:", e.message);
         }
     }
 
     // 4. Run SEO Analyzer
-    console.log(`Running SEO analyzer for ${business.name}`);
+    console.log(`[Enrichment] Running SEO analyzer for ${business.name}`);
     const audit = generateAudit(business);
     business.seoAudit = audit;
-    business.seoScore = audit.urgency === "High" ? 40 : audit.urgency === "Medium" ? 70 : 90; // Approximate score
+    business.seoScore = audit.urgency === "High" ? 40 : audit.urgency === "Medium" ? 70 : 90;
 
     // 5. Generate Outreach
-    console.log(`Generating outreach for ${business.name}`);
+    console.log(`[Enrichment] Generating outreach for ${business.name}`);
     const outreach = generateOutreach(business, audit);
     business.outreach = outreach;
+
+    // Save enrichment results back to the lead/business model
+    if (business.save) {
+        await business.save();
+    } else {
+        // If it's a plain search result object, we might need to find it and update it
+        const Business = require("../models/business.model");
+        await Business.updateOne({ name: business.name, city: business.city }, { $set: business });
+    }
 
     return business;
 }

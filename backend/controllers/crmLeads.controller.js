@@ -76,7 +76,7 @@ exports.updateLead = async (req, res) => {
         const lead = await Lead.findOneAndUpdate(
             { _id: req.params.id, userId: req.user._id },   // scoped to this user
             { $set: patch },
-            { new: true }
+            { returnDocument: "after" }
         )
 
         if (!lead) return res.status(404).json({ success: false, message: "Lead not found" })

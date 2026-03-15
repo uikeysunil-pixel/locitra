@@ -21,9 +21,7 @@
  *    "No Website" lead status so it can still be pitched.
  */
 
-const axios = require("axios")
-
-const SERPAPI_URL = "https://serpapi.com/search.json"
+const { serpRequest } = require("../../utils/serpClient")
 
 /* Maximum website lookups per scan — controls API credit usage */
 const MAX_DETECTIONS = 40
@@ -122,17 +120,13 @@ const detectWebsite = async (business, city) => {
 
     try {
 
-        const response = await axios.get(SERPAPI_URL, {
-            params: {
-                engine: "google",
-                q: query,
-                num: 5,
-                api_key: process.env.SERPAPI_KEY
-            },
-            timeout: 15000
+        const data = await serpRequest({
+            engine: "google",
+            q: query,
+            num: 5
         })
 
-        const organicResults = response.data?.organic_results || []
+        const organicResults = data?.organic_results || []
 
         for (const result of organicResults.slice(0, 5)) {
 

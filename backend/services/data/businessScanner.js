@@ -1,9 +1,7 @@
-const axios = require("axios")
-const { enrichWithWebsites } = require("./websiteDetector")
-const { enrichAllContacts } = require("./contactDiscovery")
-const { enrichLead } = require("../enrichment.service")
 const Business = require("../../models/business.model")
 const ScanCache = require("../../models/scanCache.model")
+const { serpRequest } = require("../../utils/serpClient")
+const { addEnrichmentJob } = require("../../queues/enrichment.queue")
 
 const SERPAPI_URL = "https://serpapi.com/search.json"
 
@@ -87,18 +85,14 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
 
         while (allBusinesses.length < limit) {
 
-            const response = await axios.get(SERPAPI_URL, {
-                params: {
-                    engine: "google_maps",
-                    q: `${keyword} in ${location}`,
-                    type: "search",
-                    start,
-                    api_key: apiKey
-                },
-                timeout: 30000
+            const data = await serpRequest({
+                engine: "google_maps",
+                q: `${keyword} in ${location}`,
+                type: "search",
+                start
             })
 
-            const results = response.data?.local_results || []
+            const results = data?.local_results || []
 
             if (results.length === 0) {
                 console.log(
@@ -157,64 +151,18 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
         }
 
     } catch (error) {
-
-        const serpError = error.response?.data?.error
-        if (serpError) {
-            console.error("[businessScanner] ❌ SerpAPI error:", serpError)
-        } else {
-            console.error("[businessScanner] ❌ Request failed:", error.message)
-        }
-
+        console.error("[businessScanner] ❌ Request failed:", error.message)
     }
 
     const sliced = allBusinesses.slice(0, limit)
 
     console.log("[businessScanner] Maps fetch complete:", sliced.length, "businesses")
 
-    // ── Website Enrichment ─────────────────────────────────────────────────
-    // For businesses that Google Maps didn't return a website for, try to
-    // detect one via a targeted Google search.  Runs AFTER pagination so it
-    // only fires once and the cap (50) applies to the full result set.
-    const beforeCount = sliced.filter(b => !b.website).length
-    const enriched = await enrichWithWebsites(sliced, location)
-    const afterCount = enriched.filter(b => !b.website).length
-    const newlyFound = beforeCount - afterCount
-
-    if (newlyFound > 0) {
-        console.log(
-            `[businessScanner] Website enrichment added ${newlyFound} URLs. ` +
-            `Recalculating opportunity scores…`
-        )
-        // Recompute scores for enriched businesses — detecting a website
-        // removes the +15 "no website" bonus so scores must be refreshed.
-        for (const b of enriched) {
-            b.opportunityScore = computeOpportunityScore(b)
-        }
-    }
-
-    console.log("[businessScanner] Final businesses collected:", enriched.length)
-    console.log(
-        `[businessScanner] Website coverage: ` +
-        `${enriched.filter(b => b.website).length}/${enriched.length} have a website`
-    )
-
-    // ── Contact Discovery ───────────────────────────────────────────────────
-    // Runs after website enrichment so businesses that just gained a website
-    // are immediately eligible for email / social profile extraction.
-    console.log("[businessScanner] Starting Advanced Contact Discovery & AI Enrichment…")
-    const withContacts = await enrichAllContacts(enriched, location)
-
-    // Deep advanced enrichment mapping
-    console.log("[businessScanner] Running deeper AI enrichment passes on leads...")
-    const deeplyEnriched = await Promise.all(
-        withContacts.map(lead => enrichLead(lead))
-    )
-
-    const scannedBusinesses = deeplyEnriched
+    const scannedBusinesses = sliced
 
     try {
         console.log("Saving leads")
-        await Business.insertMany(
+        const savedLeads = await Business.insertMany(
             scannedBusinesses.map(b => ({
                 ...b,
                 keyword,
@@ -223,6 +171,11 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
             })),
             { ordered: false }
         )
+
+        // Queue enrichment jobs for new leads
+        for (const lead of savedLeads) {
+            await addEnrichmentJob(lead._id)
+        }
     } catch (cacheErr) {
         if (cacheErr.code !== 11000) {
             console.error("[businessScanner] Cache save error:", cacheErr.message)

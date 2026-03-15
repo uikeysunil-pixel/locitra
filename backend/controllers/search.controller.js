@@ -1,4 +1,4 @@
-const ScanCache = require("../models/ScanCache")
+const ScanCache = require("../models/scanCache.model")
 const { analyzeBusiness } = require("../services/seoAnalyzer")
 const { analyzeMarket } = require("../services/marketAnalyzer")
 const { scanBusinesses } = require("../services/data/businessScanner")

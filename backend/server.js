@@ -5,7 +5,16 @@ require("dotenv").config()
 
 const connectDB = require("./config/db")
 
+// Ensure Models Load Once
+require("./models")
+console.log("Models loaded successfully")
+
 const searchRoutes = require("./routes/search.routes")
+const { startEnrichmentWorker } = require("./workers/enrichment.worker")
+const WORKER_COUNT = parseInt(process.env.WORKER_COUNT) || 1
+for (let i = 0; i < WORKER_COUNT; i++) {
+    startEnrichmentWorker(i)
+}
 const marketRoutes = require("./routes/market.routes")
 const prospectRoutes = require("./routes/prospect.routes")
 const dashboardRoutes = require("./routes/dashboard.routes")

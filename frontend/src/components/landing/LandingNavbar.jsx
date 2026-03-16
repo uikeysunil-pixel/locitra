@@ -24,7 +24,7 @@ export default function LandingNavbar() {
                         Login
                     </Link>
                     <Link to="/register" className="text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-sm transition-all hover:shadow">
-                        Start Free Trial
+                        Create Free Account
                     </Link>
                 </div>
             </div>

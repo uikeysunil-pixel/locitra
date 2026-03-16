@@ -19,7 +19,31 @@ exports.registerUser = async (req, res, next) => {
 
     try {
 
-        const { email, password, companyName } = req.body
+        const { email, password, companyName, turnstileToken } = req.body
+
+        const enableTurnstile = process.env.ENABLE_TURNSTILE && process.env.ENABLE_TURNSTILE.trim().toLowerCase() === "true";
+
+        if (enableTurnstile) {
+            if (!turnstileToken) {
+                return res.status(400).json({ success: false, message: "Bot verification failed: Token missing" });
+            }
+
+            const secretKey = process.env.TURNSTILE_SECRET_KEY || "YOUR_SECRET_KEY";
+            const formData = new URLSearchParams();
+            formData.append("secret", secretKey);
+            formData.append("response", turnstileToken);
+
+            const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+                method: "POST",
+                body: formData
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+                return res.status(400).json({ success: false, message: "Bot verification failed" });
+            }
+        }
 
         if (!email || !password) {
             return res.status(400).json({
@@ -111,7 +135,31 @@ exports.loginUser = async (req, res, next) => {
 
     try {
 
-        const { email, password } = req.body
+        const { email, password, turnstileToken } = req.body
+
+        const enableTurnstile = process.env.ENABLE_TURNSTILE === "true";
+
+        if (enableTurnstile) {
+            if (!turnstileToken) {
+                return res.status(400).json({ success: false, message: "Bot verification failed: Token missing" });
+            }
+
+            const secretKey = process.env.TURNSTILE_SECRET_KEY || "YOUR_SECRET_KEY";
+            const formData = new URLSearchParams();
+            formData.append("secret", secretKey);
+            formData.append("response", turnstileToken);
+
+            const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+                method: "POST",
+                body: formData
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+                return res.status(400).json({ success: false, message: "Bot verification failed" });
+            }
+        }
 
         if (!email || !password) {
             return res.status(400).json({
@@ -245,7 +293,31 @@ exports.verifyEmail = async (req, res, next) => {
 // @access  Public
 exports.resendVerification = async (req, res, next) => {
     try {
-        const { email } = req.body;
+        const { email, turnstileToken } = req.body;
+
+        const enableTurnstile = process.env.ENABLE_TURNSTILE === "true";
+
+        if (enableTurnstile) {
+            if (!turnstileToken) {
+                return res.status(400).json({ success: false, message: "Bot verification failed: Token missing" });
+            }
+
+            const secretKey = process.env.TURNSTILE_SECRET_KEY || "YOUR_SECRET_KEY";
+            const formData = new URLSearchParams();
+            formData.append("secret", secretKey);
+            formData.append("response", turnstileToken);
+
+            const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+                method: "POST",
+                body: formData
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+                return res.status(400).json({ success: false, message: "Bot verification failed" });
+            }
+        }
 
         if (!email) {
             return res.status(400).json({ success: false, message: "Please provide an email" });

@@ -4,6 +4,7 @@ import { authLogin, authResendVerification } from "../services/api"
 import useAuthStore from "../store/authStore"
 
 export default function Login() {
+    const enableTurnstile = import.meta.env.VITE_ENABLE_TURNSTILE === "true";
 
     const navigate = useNavigate()
     const location = useLocation()
@@ -31,8 +32,8 @@ export default function Login() {
             return
         }
 
-        let turnstileToken = null;
-        if (import.meta.env.VITE_ENABLE_TURNSTILE === "true") {
+        let turnstileToken = undefined;
+        if (enableTurnstile) {
             if (window.turnstile) {
                 turnstileToken = window.turnstile.getResponse()
                 if (!turnstileToken) {
@@ -44,10 +45,11 @@ export default function Login() {
 
         setResendLoading(true)
         const res = await authResendVerification(email, turnstileToken)
+        setResendLoading(true)
         setResendLoading(false)
 
         if (!res.success) {
-            if (window.turnstile) window.turnstile.reset();
+            if (enableTurnstile && window.turnstile) window.turnstile.reset();
             setResendError(res.error || "Failed to resend verification email.")
         } else {
             setResendSuccess("Verification email sent. Please check your inbox.")
@@ -58,8 +60,8 @@ export default function Login() {
         e.preventDefault()
         setError("")
 
-        let turnstileToken = null;
-        if (import.meta.env.VITE_ENABLE_TURNSTILE === "true") {
+        let turnstileToken = undefined;
+        if (enableTurnstile) {
             if (window.turnstile) {
                 turnstileToken = window.turnstile.getResponse()
                 if (!turnstileToken) {
@@ -75,7 +77,7 @@ export default function Login() {
         setLoading(false)
 
         if (!res.success) {
-            if (window.turnstile) window.turnstile.reset();
+            if (enableTurnstile && window.turnstile) window.turnstile.reset();
             setError(res.error || "Login failed. Check your credentials.")
             return
         }
@@ -128,7 +130,7 @@ export default function Login() {
                     />
 
                     {/* Turnstile Widget */}
-                    {import.meta.env.VITE_ENABLE_TURNSTILE === "true" && (
+                    {enableTurnstile && (
                         <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
                             <div className="cf-turnstile" data-sitekey="YOUR_SITE_KEY"></div>
                         </div>

@@ -92,26 +92,35 @@ const fetchJSON = async (
 
 /* ---------------- Auth ---------------------------------------- */
 
-export const authLogin = (email, password, turnstileToken) =>
-    fetchJSON("/auth/login", {}, {
+export const authLogin = (email, password, turnstileToken) => {
+    const body = { email, password }
+    if (turnstileToken) body.turnstileToken = turnstileToken
+    return fetchJSON("/auth/login", {}, {
         method: "POST",
-        body: { email, password, turnstileToken },
+        body,
         skipAuth: true
     })
+}
 
-export const authRegister = (email, password, companyName, turnstileToken) =>
-    fetchJSON("/auth/register", {}, {
+export const authRegister = (email, password, companyName, turnstileToken, plan = "Free") => {
+    const body = { email, password, companyName, plan }
+    if (turnstileToken) body.turnstileToken = turnstileToken
+    return fetchJSON("/auth/register", {}, {
         method: "POST",
-        body: { email, password, companyName, turnstileToken },
+        body,
         skipAuth: true
     })
+}
 
-export const authResendVerification = (email, turnstileToken) =>
-    fetchJSON("/auth/resend-verification", {}, {
+export const authResendVerification = (email, turnstileToken) => {
+    const body = { email }
+    if (turnstileToken) body.turnstileToken = turnstileToken
+    return fetchJSON("/auth/resend-verification", {}, {
         method: "POST",
-        body: { email, turnstileToken },
+        body,
         skipAuth: true
     })
+}
 
 export const fetchMe = () => fetchJSON("/auth/me")
 

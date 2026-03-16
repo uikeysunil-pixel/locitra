@@ -1,12 +1,15 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { authRegister } from "../services/api"
+import { plans } from "../config/plans"
 
 export default function Register() {
+    const enableTurnstile = import.meta.env.VITE_ENABLE_TURNSTILE === "true";
 
     const navigate = useNavigate()
 
     const [form, setForm] = useState({ email: "", password: "", companyName: "" })
+    const [selectedPlan, setSelectedPlan] = useState("Free")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
@@ -16,8 +19,8 @@ export default function Register() {
         e.preventDefault()
         setError("")
 
-        let turnstileToken = null;
-        if (import.meta.env.VITE_ENABLE_TURNSTILE === "true") {
+        let turnstileToken = undefined;
+        if (enableTurnstile) {
             if (window.turnstile) {
                 turnstileToken = window.turnstile.getResponse()
                 if (!turnstileToken) {
@@ -29,11 +32,11 @@ export default function Register() {
 
         setLoading(true)
 
-        const res = await authRegister(form.email, form.password, form.companyName, turnstileToken)
+        const res = await authRegister(form.email, form.password, form.companyName, turnstileToken, selectedPlan)
         setLoading(false)
 
         if (!res.success) {
-            if (window.turnstile) window.turnstile.reset();
+            if (enableTurnstile && window.turnstile) window.turnstile.reset();
             setError(res.error || "Registration failed. Please try again.")
             return
         }
@@ -88,22 +91,48 @@ export default function Register() {
                         required
                     />
 
-                    {/* Plan comparison mini-table */}
+                    {/* Plan selection */}
+                    <div style={labelBlock}>Select your plan:</div>
                     <div style={plansBox}>
-                        <PlanRow icon="🆓" name="Free" detail="2 scans/day · 100 businesses" />
-                        <PlanRow icon="🚀" name="Starter" detail="20 scans/day · 500 businesses · $49/mo" />
-                        <PlanRow icon="🏢" name="Agency" detail="Unlimited · 500+ businesses · $99/mo" />
+                        {plans.map((plan) => (
+                            <div 
+                                key={plan.name}
+                                onClick={() => setSelectedPlan(plan.name)}
+                                style={{
+                                    ...planRow,
+                                    border: selectedPlan === plan.name ? "2px solid #6366f1" : "2px solid transparent",
+                                    background: selectedPlan === plan.name ? "#fff" : "transparent",
+                                    cursor: "pointer",
+                                    padding: "10px",
+                                    borderRadius: "10px",
+                                    transition: "all 0.2s"
+                                }}
+                            >
+                                <span style={{ fontSize: "16px" }}>{plan.icon}</span>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <span style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a" }}>{plan.name}</span>
+                                        <span style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a" }}>
+                                            {plan.price === 0 ? "Free" : `$${plan.price}/mo`}
+                                        </span>
+                                    </div>
+                                    <span style={{ fontSize: "11px", color: "#64748b" }}>
+                                        {plan.scansPerDay} scans · {plan.businesses} leads
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Turnstile Widget */}
-                    {import.meta.env.VITE_ENABLE_TURNSTILE === "true" && (
+                    {enableTurnstile && (
                         <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
                             <div className="cf-turnstile" data-sitekey="YOUR_SITE_KEY"></div>
                         </div>
                     )}
 
                     <button type="submit" style={btn} disabled={loading}>
-                        {loading ? "Creating account…" : "Create Free Account"}
+                        {loading ? "Creating account…" : selectedPlan === "Free" ? "Create Free Account" : `Join ${selectedPlan} Plan`}
                     </button>
 
                 </form>
@@ -118,16 +147,12 @@ export default function Register() {
     )
 }
 
-function PlanRow({ icon, name, detail }) {
-    return (
-        <div style={planRow}>
-            <span style={{ fontSize: "16px" }}>{icon}</span>
-            <div>
-                <span style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a" }}>{name}</span>
-                <span style={{ fontSize: "12px", color: "#64748b", marginLeft: "8px" }}>{detail}</span>
-            </div>
-        </div>
-    )
+const labelBlock = {
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "#374151",
+    marginTop: "20px",
+    marginBottom: "8px"
 }
 
 /* ── Styles ── */

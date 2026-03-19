@@ -1,0 +1,177 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+    Search, 
+    ShieldCheck, 
+    Users, 
+    BarChart3, 
+    Target, 
+    ArrowRight,
+    CheckCircle2,
+    ChevronRight
+} from 'lucide-react';
+
+const tools = [
+    {
+        name: "Google Maps Ranking Checker",
+        description: "Check your business rankings on Google Maps for specific keywords and locations.",
+        icon: Search,
+        path: "/tools/google-maps-rank-checker",
+        color: "blue"
+    },
+    {
+        name: "Google Business Profile Audit",
+        description: "Get a comprehensive audit of your GMB profile and identify optimization gaps.",
+        icon: ShieldCheck,
+        path: "/tools/google-business-profile-audit",
+        color: "green"
+    },
+    {
+        name: "Local Competitor Finder",
+        description: "Discover who your top local competitors are and see how you stack up against them.",
+        icon: Users,
+        path: "/tools/local-competitor-finder",
+        color: "purple"
+    },
+    {
+        name: "Review Gap Analyzer",
+        description: "Analyze the total review gap between you and your top ranking competitors.",
+        icon: BarChart3,
+        path: "/tools/review-gap-analyzer",
+        color: "orange"
+    },
+    {
+        name: "Local SEO Opportunity Finder",
+        description: "Find weak competitors in your area that you can easily outrank with better SEO.",
+        icon: Target,
+        path: "/tools/local-opportunity-finder",
+        color: "red"
+    }
+];
+
+const ToolsHub = () => {
+    return (
+        <div className="min-h-screen bg-slate-50">
+            {/* Hero Section */}
+            <div className="bg-white border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                        Free Local SEO Tools by <span className="text-blue-600">Locitra</span>
+                    </h1>
+                    <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+                        Analyze Google Maps rankings, audit business profiles, and find local SEO opportunities in seconds. No credit card required.
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <a href="#tools-grid" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                            Try a Free Tool
+                        </a>
+                        <Link to="/signup" className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm">
+                            Create Free Account
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tools Grid */}
+            <div id="tools-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {tools.map((tool) => (
+                        <div key={tool.path} className="bg-white rounded-2xl border border-slate-200 p-8 hover:shadow-xl transition-all group flex flex-col h-full">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-${tool.color}-50 text-${tool.color}-600 group-hover:scale-110 transition-transform`}>
+                                <tool.icon size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-3">{tool.name}</h3>
+                            <p className="text-slate-600 mb-8 flex-grow">
+                                {tool.description}
+                            </p>
+                            <Link 
+                                to={tool.path}
+                                className="inline-flex items-center justify-between w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                            >
+                                Try Tool
+                                <ArrowRight size={18} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Popular Searches Section (Internal Linking) */}
+            <div className="bg-white py-20 border-t border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-2">
+                        <Target size={24} className="text-blue-600" />
+                        Popular Local SEO Searches
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { name: "Dentists in Chicago", slug: "dentist-chicago" },
+                            { name: "Plumbers in Dallas", slug: "plumber-dallas" },
+                            { name: "Roofers in Miami", slug: "roofer-miami" },
+                            { name: "Lawyers in Los Angeles", slug: "lawyer-los-angeles" },
+                            { name: "HVAC in Houston", slug: "hvac-houston" },
+                            { name: "Realtors in Phoenix", slug: "realtor-phoenix" },
+                            { name: "Locksmiths in Seattle", slug: "locksmith-seattle" },
+                            { name: "Clinics in Boston", slug: "clinic-boston" }
+                        ].map((item) => (
+                            <Link 
+                                key={item.slug}
+                                to={`/tools/google-maps-ranking-checker/${item.slug}`}
+                                className="text-slate-600 hover:text-blue-600 font-medium transition-colors flex items-center gap-1 group"
+                            >
+                                <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                                {item.name}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Conversion Section */}
+            <div className="bg-slate-900 py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                                Unlock Full Local SEO Intelligence
+                            </h2>
+                            <ul className="space-y-4 mb-8">
+                                {[
+                                    "Full competitor reports & history",
+                                    "AI-powered ranking insights & tips",
+                                    "Unlimited scans for any keyword/city",
+                                    "Lead generation & export tools",
+                                    "Agency-grade white label analytics"
+                                ].map((feature, i) => (
+                                    <li key={i} className="flex items-center text-slate-300">
+                                        <CheckCircle2 size={20} className="text-blue-500 mr-3 shrink-0" />
+                                        {feature}
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg">
+                                Create Free Account Now
+                            </Link>
+                        </div>
+                        <div className="hidden lg:block relative">
+                            <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full"></div>
+                            <div className="relative bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+                                <div className="space-y-4">
+                                    <div className="h-4 w-2/3 bg-slate-700 rounded animate-pulse"></div>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="h-20 bg-slate-700 rounded animate-pulse"></div>
+                                        <div className="h-20 bg-slate-700 rounded animate-pulse"></div>
+                                        <div className="h-20 bg-slate-700 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="h-32 w-full bg-slate-700 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ToolsHub;

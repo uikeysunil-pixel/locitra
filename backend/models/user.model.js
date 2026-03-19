@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
         },
         scanResetDate: {
             type: Date
+        },
+        role: {
+            type: String,
+            enum: ["user", "admin"],
+            default: "user"
         }
     },
     {

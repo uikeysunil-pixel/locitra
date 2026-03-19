@@ -50,7 +50,11 @@ exports.saveLead = async (req, res) => {
 // @access Private
 exports.getMyLeads = async (req, res) => {
     try {
-        const leads = await Lead.find({ userId: req.user._id })
+        const query = req.user.role === 'admin' 
+            ? { $or: [{ userId: req.user._id }, { userId: null }] } 
+            : { userId: req.user._id }
+
+        const leads = await Lead.find(query)
             .sort({ priorityScore: -1, createdAt: -1 })
             .lean()
 

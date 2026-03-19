@@ -7,6 +7,11 @@ const scanLimit = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Not authorized" })
         }
 
+        // Bypassing for admin
+        if (req.user.role === "admin") {
+            return next()
+        }
+
         const user = await User.findById(req.user.id)
 
         if (!user) {

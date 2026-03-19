@@ -166,7 +166,10 @@ export default function LeadManager() {
                                         <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                             {lead.name}
                                         </div>
-                                        {lead.category && <div style={catTag}>{lead.category}</div>}
+                                        <div style={{ display: "flex", gap: "4px", marginTop: "2px" }}>
+                                            {lead.category && <div style={catTag}>{lead.category}</div>}
+                                            {!lead.userId && <div style={systemTag}>System Lead</div>}
+                                        </div>
                                     </td>
 
                                     <td style={{ ...td, color: "#64748b", fontSize: "12px" }}>{lead.city || "—"}</td>
@@ -259,6 +262,7 @@ const tr = { transition: "background .1s" }
 const link = { color: "#6366f1", fontWeight: "600", fontSize: "12px" }
 const noSite = { color: "#ef4444", fontSize: "12px", fontWeight: "600" }
 const catTag = { fontSize: "10px", color: "#94a3b8", marginTop: "2px" }
+const systemTag = { fontSize: "10px", background: "#f1f5f9", color: "#64748b", padding: "1px 6px", borderRadius: "10px", fontWeight: "700" }
 const noteInput = { padding: "6px 8px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "12px", width: "130px", outline: "none" }
 const saveBtn = { padding: "4px 8px", borderRadius: "6px", background: "#6366f1", color: "#fff", border: "none", cursor: "pointer", fontSize: "12px" }
 const deleteBtn = { padding: "6px 10px", borderRadius: "6px", background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", cursor: "pointer", fontSize: "11px", fontWeight: "700", transition: "all 0.2s" }

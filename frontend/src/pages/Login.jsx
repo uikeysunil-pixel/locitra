@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { authLogin, authResendVerification } from "../services/api"
+import { authResendVerification } from "../services/api"
+import axios from "axios"
 import useAuthStore from "../store/authStore"
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 
 export default function Login() {
     const enableTurnstile = import.meta.env.VITE_ENABLE_TURNSTILE === "true";
@@ -56,34 +59,57 @@ export default function Login() {
         }
     }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+    const handleLogin = async (e) => {
+        if (e) e.preventDefault()
+        console.log("handleLogin triggered")
         setError("")
 
         let turnstileToken = undefined;
         if (enableTurnstile) {
+            console.log("Checking Turnstile...")
             if (window.turnstile) {
                 turnstileToken = window.turnstile.getResponse()
+                console.log("Turnstile token present:", !!turnstileToken)
                 if (!turnstileToken) {
                     setError("Please complete the bot verification.")
                     return
                 }
+            } else {
+                console.warn("Turnstile enabled but not found on window")
             }
         }
 
+        console.log("Executing login request via axios...")
         setLoading(true)
 
-        const res = await authLogin(email, password, turnstileToken)
-        setLoading(false)
+        try {
+            const response = await axios.post(`${API_BASE}/auth/login`, {
+                email,
+                password,
+                turnstileToken
+            })
 
-        if (!res.success) {
-            if (enableTurnstile && window.turnstile) window.turnstile.reset();
-            setError(res.error || "Login failed. Check your credentials.")
-            return
+            console.log("Login success:", response.data)
+            setLoading(false)
+
+            if (response.data.success) {
+                login(response.data.user)
+                console.log("Redirecting to dashboard (/app)...")
+                navigate("/app")
+            } else {
+                setError(response.data.message || "Login failed")
+            }
+        } catch (err) {
+            console.error("Login attempt failed:", err)
+            setLoading(false)
+            
+            const msg = err.response?.data?.message || err.message || "Connection error"
+            setError(msg)
+            
+            if (enableTurnstile && window.turnstile) {
+                window.turnstile.reset()
+            }
         }
-
-        login(res.data.user)
-        navigate("/")
     }
 
     return (
@@ -107,7 +133,7 @@ export default function Login() {
 
                 {error && <div style={errorBox}>{error}</div>}
 
-                <form onSubmit={handleSubmit} style={formStyle}>
+                <form onSubmit={handleLogin} style={formStyle}>
 
                     <label style={label}>Email</label>
                     <input

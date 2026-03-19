@@ -1,8 +1,10 @@
 import Sidebar from "./Sidebar"
+import CommandPalette from "./ui/CommandPalette"
 
 export default function Layout({ children }) {
     return (
         <div style={appLayout}>
+            <CommandPalette />
             <Sidebar />
             <div style={mainArea}>
                 <main style={content}>

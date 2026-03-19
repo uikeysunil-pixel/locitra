@@ -12,7 +12,8 @@ const useAuthStore = create(
                     _id: data._id,
                     email: data.email,
                     companyName: data.companyName,
-                    plan: data.plan
+                    plan: data.plan,
+                    role: data.role
                 },
                 token: data.token
             }),

@@ -29,8 +29,35 @@ exports.freeScan = async (req, res) => {
             })
         }
 
-        /* Run existing scanner — capped at 50 results for free tier */
-        const allBusinesses = await scanBusinesses(keyword, location, 50)
+        const normalizedKeyword = keyword.toLowerCase().trim()
+        const normalizedLocation = location.toLowerCase().trim()
+
+        // 1. CHECK MONGODB CACHE FIRST
+        console.log("[FreeScan] Checking MongoDB cache for:", { keyword: normalizedKeyword, location: normalizedLocation })
+        let allBusinesses = await Business.find({
+            keyword: normalizedKeyword,
+            location: normalizedLocation
+        }).lean()
+
+        if (allBusinesses.length === 0) {
+            /* Run existing scanner — capped at 50 results for free tier */
+            console.log("[FreeScan] Cache miss → calling scanner")
+            try {
+                allBusinesses = await scanBusinesses(keyword, location, 50)
+            } catch (scanErr) {
+                console.error("[FreeScan] Scanner failed:", scanErr.message)
+                return res.status(500).json({
+                    success: false,
+                    message: "Scan failed. API unavailable and no cached data found."
+                })
+            }
+        } else {
+            console.log(`[FreeScan] Cache hit! Found ${allBusinesses.length} businesses.`)
+            // Cap at 50 for free tier if we got more from DB
+            if (allBusinesses.length > 50) {
+                allBusinesses = allBusinesses.slice(0, 50)
+            }
+        }
 
         /* Record this IP's scan time */
         ipThrottle.set(ip, Date.now())

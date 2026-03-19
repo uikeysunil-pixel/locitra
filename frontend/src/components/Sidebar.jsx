@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 import useAuthStore from "../store/authStore"
 
 const NAV_MAIN = [
-    { to: "/", icon: "⬛", label: "Dashboard" },
+    { to: "/app", icon: "⬛", label: "Dashboard" },
     { to: "/leads", icon: "🚀", label: "Lead Generator" },
-    { to: "/gaps", icon: "📈", label: "Market Gaps" },
+    { to: "/dashboard/market-gaps", icon: "📈", label: "Market Gaps" },
     { to: "/alerts", icon: "🔔", label: "Alerts" },
 ]
 
@@ -19,15 +20,43 @@ export default function Sidebar() {
 
     const { pathname } = useLocation()
     const user = useAuthStore((s) => s.user)
+    const token = useAuthStore((s) => s.token)
     const logout = useAuthStore((s) => s.logout)
+
+    const [unreadCount, setUnreadCount] = useState(0)
+
+    useEffect(() => {
+        if (!token) return
+        const fetchUnread = async () => {
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/alerts`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                })
+                const data = await res.json()
+                if (data.unreadCount !== undefined) {
+                    setUnreadCount(data.unreadCount)
+                }
+            } catch (e) {
+                console.error("Failed to fetch unread alerts", e)
+            }
+        }
+        fetchUnread()
+        // Poll every 5 minutes for new alerts
+        const interval = setInterval(fetchUnread, 1000 * 60 * 5)
+        return () => clearInterval(interval)
+    }, [token, pathname])
 
     const NavItem = ({ to, icon, label }) => {
         const active = pathname === to
+        const hasAlerts = label === "Alerts" && unreadCount > 0
         return (
             <li key={to}>
                 <Link to={to} style={{ ...itemStyle, ...(active ? activeStyle : {}) }}>
                     <span style={iconStyle}>{icon}</span>
-                    {label}
+                    <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {label}
+                        {hasAlerts && <span title={`${unreadCount} new opportunities`} style={notificationDot} />}
+                    </span>
                     {active && <span style={activeDot} />}
                 </Link>
             </li>
@@ -76,6 +105,14 @@ export default function Sidebar() {
 }
 
 /* ── Styles ──────────────────────────────────────────── */
+
+const notificationDot = {
+    width: "7px",
+    height: "7px",
+    background: "#ef4444",
+    borderRadius: "50%",
+    boxShadow: "0 0 8px rgba(239, 68, 68, 0.5)"
+}
 
 const sidebarStyle = {
     width: "var(--sidebar-w, 240px)",

@@ -70,6 +70,7 @@ exports.verifyPaypalOrder = async (req, res) => {
 
         if (capture.status === "COMPLETED") {
             await User.findByIdAndUpdate(req.user._id, { plan })
+            console.log("Payment success (PayPal):", req.user._id, plan)
             res.json({ success: true, plan })
         } else {
             res.status(400).json({ success: false, message: "Payment not completed" })
@@ -134,6 +135,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
         }
 
         await User.findByIdAndUpdate(req.user._id, { plan })
+        console.log("Payment success (Razorpay):", req.user._id, plan)
         res.json({ success: true, plan })
     } catch (err) {
         console.error("[Billing] Razorpay verify error:", err.message)

@@ -110,6 +110,7 @@ exports.registerUser = async (req, res, next) => {
                 email: user.email,
                 companyName: user.companyName,
                 plan: user.plan,
+                role: user.role,
                 token: generateToken(user._id)
             }
         })
@@ -200,6 +201,7 @@ exports.loginUser = async (req, res, next) => {
                 email: user.email,
                 companyName: user.companyName,
                 plan: user.plan,
+                role: user.role,
                 token: generateToken(user._id)
             }
         })

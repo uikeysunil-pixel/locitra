@@ -1,8 +1,10 @@
 const express = require("express")
 const router = express.Router()
 
-const { getAlerts } = require("../controllers/alerts.controller")
+const { protect } = require("../middlewares/auth.middleware")
+const { getAlerts, markAsRead } = require("../controllers/alerts.controller")
 
-router.get("/", getAlerts)
+router.get("/", protect, getAlerts)
+router.put("/read", protect, markAsRead)
 
 module.exports = router

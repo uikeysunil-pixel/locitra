@@ -1,5 +1,6 @@
 const Business = require("../../models/business.model")
 const ScanCache = require("../../models/scanCache.model")
+const ScanLog = require("../../models/scanLog.model")
 const { serpRequest } = require("../../utils/serpClient")
 const { addEnrichmentJob } = require("../../queues/enrichment.queue")
 
@@ -40,7 +41,7 @@ const computeOpportunityScore = (business) => {
  * Each page returns up to 20 results; we keep fetching until we reach
  * the limit or SerpAPI returns an empty page.
  */
-exports.scanBusinesses = async (keyword, location, limit = 500) => {
+exports.scanBusinesses = async (keyword, location, limit = 500, userId = null, userEmail = "anonymous") => {
 
     const apiKey = process.env.SERPAPI_KEY
     const city = location
@@ -51,7 +52,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     }
 
     console.log(`[businessScanner] SCAN REQUEST: ${keyword} ${city}`)
-    console.log("Checking MongoDB cache")
+    const cacheLimit = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days
     const cachedBusinesses = await Business.find({
         keyword,
         city,
@@ -60,6 +61,14 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
 
     if (cachedBusinesses.length > 0) {
         console.log("Cache hit")
+        await ScanLog.create({
+            user: userId,
+            userEmail,
+            keyword,
+            location: city,
+            source: "cache",
+            resultsCount: cachedBusinesses.length
+        })
         return cachedBusinesses
     }
 
@@ -73,6 +82,14 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
 
     if (cached) {
         console.log("Cache hit")
+        await ScanLog.create({
+            user: userId,
+            userEmail,
+            keyword,
+            location: city,
+            source: "cache",
+            resultsCount: cached.results ? cached.results.length : 0
+        })
         return cached.results
     }
 
@@ -167,6 +184,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
                 ...b,
                 keyword,
                 city,
+                location: city, // Ensure location is also saved for consistency
                 createdAt: new Date()
             })),
             { ordered: false }
@@ -197,6 +215,16 @@ exports.scanBusinesses = async (keyword, location, limit = 500) => {
     }
 
     console.log("[businessScanner] ✅ Pipeline complete. Returning", scannedBusinesses.length, "businesses.")
+    
+    await ScanLog.create({
+        user: userId,
+        userEmail,
+        keyword,
+        location: city,
+        source: "serpapi",
+        resultsCount: scannedBusinesses.length
+    })
+
     return scannedBusinesses
 
 }

@@ -4,6 +4,10 @@ const SERP_DELAY = 1000 // 1 second delay between calls to protect quota
 let lastCallTime = 0
 let quotaExceeded = false
 
+// Stats tracking
+let totalCallsToday = 0
+let totalCallsThisMonth = 0
+
 /**
  * Centralized SerpAPI client with rate limiting and quota protection.
  */
@@ -31,6 +35,9 @@ async function serpRequest(params) {
         })
 
         lastCallTime = Date.now()
+        totalCallsToday++
+        totalCallsThisMonth++
+        
         return response.data
 
     } catch (error) {
@@ -57,4 +64,11 @@ function resetQuota() {
     quotaExceeded = false
 }
 
-module.exports = { serpRequest, resetQuota }
+function getUsage() {
+    return {
+        today: totalCallsToday,
+        month: totalCallsThisMonth
+    }
+}
+
+module.exports = { serpRequest, resetQuota, getUsage }

@@ -5,9 +5,9 @@ require("dotenv").config()
 
 const connectDB = require("./config/db")
 
-// Ensure Models Load Once
-require("./models")
-console.log("Models loaded successfully")
+const locitraEvents = require("./utils/events")
+require("./listeners/alerts.listener")
+console.log("Models and Listeners loaded successfully")
 
 const searchRoutes = require("./routes/search.routes")
 const { startEnrichmentWorker } = require("./workers/enrichment.worker")
@@ -20,6 +20,7 @@ const prospectRoutes = require("./routes/prospect.routes")
 const dashboardRoutes = require("./routes/dashboard.routes")
 const gapRoutes = require("./routes/gap.routes")
 const alertsRoutes = require("./routes/alerts.routes")
+const adminRoutes = require("./routes/admin.routes") // Added admin routes import
 const advisorRoutes = require("./routes/advisor.routes")
 const leadsRoutes = require("./routes/leads.routes")
 const outreachRoutes = require("./routes/outreach.routes")
@@ -28,11 +29,15 @@ const authRoutes = require("./routes/auth.routes")
 const crmLeadsRoutes = require("./routes/crmLeads.routes")
 const analyticsRoutes = require("./routes/analytics.routes")
 const reportsRoutes = require("./routes/reports.routes")
+const reportRoutes = require("./routes/report.routes")
 const billingRoutes = require("./routes/billing.routes")
 const freeScanRoutes = require("./routes/freeScan.routes")
 const watchMarketRoutes = require("./routes/watchMarket.routes")
 const enrichRoutes = require("./routes/enrich.routes")
 const systemRoutes = require("./routes/system.routes")
+const publicRoutes = require("./routes/public.routes")
+const heatmapRoutes = require("./routes/heatmap.routes")
+
 
 // Validate critical environment variables
 const requiredEnv = ["MONGO_URI", "JWT_SECRET", "SERPAPI_KEY"]
@@ -83,10 +88,13 @@ app.use("/api/auth", authRoutes)
 app.use("/api/crm", crmLeadsRoutes)
 app.use("/api/analytics", analyticsRoutes)
 app.use("/api/reports", reportsRoutes)
+app.use("/api/report", reportRoutes)
 app.use("/api/billing", billingRoutes)
 app.use("/api/free-scan", freeScanRoutes)
 app.use("/api/watch", watchMarketRoutes)
 app.use("/api/enrich", enrichRoutes)
+app.use("/api", publicRoutes)
+app.use("/api/opportunity-heatmap", heatmapRoutes)
 app.use("/api", systemRoutes)
 
 // Global Error Handler

@@ -1,11 +1,28 @@
+const locitraEvents = require("../utils/events")
 const Business = require("../models/business.model")
-
+const ScanLog = require("../models/scanLog.model")
+const User = require("../models/user.model")
 const { scanBusinesses } = require("../services/data/businessScanner")
 const { normalizeBusinesses } = require("../services/data/businessNormalizer")
-const { getCache, setCache } = require("../services/data/businessCache")
-const { scanResultsCache } = require("../services/reports/scanResultsCache")
 
-const User = require("../models/user.model")
+// Simple in-memory cache for market scans
+const scanCache = new Map()
+const scanResultsCache = {} // Exported for reports
+
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+const getCache = (key) => {
+    const cached = scanCache.get(key)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data
+    }
+    return null
+}
+
+const setCache = (key, data) => {
+    scanCache.set(key, { data, timestamp: Date.now() })
+}
+
 
 // ─────────────────────────────────────────────
 //  POST /api/market/scan
@@ -13,9 +30,7 @@ const User = require("../models/user.model")
 //  deduplicates, persists, and returns enriched metrics.
 // ─────────────────────────────────────────────
 exports.scanMarket = async (req, res) => {
-
     try {
-
         const { keyword, location } = req.body
 
         console.log("[scanMarket] SCAN REQUEST:", { keyword, location })
@@ -26,36 +41,146 @@ exports.scanMarket = async (req, res) => {
             })
         }
 
-        const cacheKey = `${keyword.toLowerCase().trim()}::${location.toLowerCase().trim()}`
+        const normalizedKeyword = keyword.toLowerCase().trim()
+        const normalizedLocation = location.toLowerCase().trim()
+        const cacheKey = `${normalizedKeyword}::${normalizedLocation}`
+        const userId = req.user ? req.user.id : null
 
-        // Return cached result if available (avoids repeat API calls)
-        const cached = getCache(cacheKey)
+        // 1. SESSION CACHE CHECK (Fastest)
+        const sessionCached = getCache(cacheKey)
+        if (sessionCached) {
+            console.log("[scanMarket] Returning session-cached result:", cacheKey)
+            res.json({ ...sessionCached, fromCache: true, cacheSource: "session" })
 
-        if (cached) {
-            console.log("[scanMarket] Returning cached result:", cacheKey)
-            return res.json({ ...cached, fromCache: true })
+            // Trigger alert generation asynchronously after response
+            setImmediate(() => {
+                try {
+                    locitraEvents.emit("scanCompleted", {
+                        businesses: sessionCached.businesses,
+                        userId,
+                        keyword: normalizedKeyword,
+                        location: normalizedLocation
+                    })
+                } catch (err) {
+                    console.error("[scanMarket] Event emission error (session cache):", err)
+                }
+            })
+            return
         }
 
-        // Fetch raw results from Google Places (up to 500)
-        const rawBusinesses = await scanBusinesses(keyword, location, 500)
+        // 2. MONGODB CACHE CHECK (Persistent)
+        console.log("[scanMarket] Checking MongoDB cache for:", { keyword: normalizedKeyword, location: normalizedLocation })
+        const dbCached = await Business.find({
+            keyword: normalizedKeyword,
+            location: normalizedLocation
+        }).lean()
 
-        console.log("[scanMarket] Raw businesses from Google:", rawBusinesses.length)
+        if (dbCached && dbCached.length > 0) {
+            console.log(`[scanMarket] Cache hit! Found ${dbCached.length} businesses in MongoDB.`)
+            
+            // ... (metrics calculation) ...
+            let totalReviews = 0
+            let totalRating = 0
+            let ratingCount = 0
+
+            for (const b of dbCached) {
+                totalReviews += b.reviews || 0
+                if (b.rating > 0) {
+                    totalRating += b.rating
+                    ratingCount++
+                }
+            }
+
+            const averageReviews = Math.round(totalReviews / dbCached.length)
+            const averageRating = ratingCount > 0
+                ? Number((totalRating / ratingCount).toFixed(1))
+                : 0
+
+            const payload = {
+                keyword: normalizedKeyword,
+                location: normalizedLocation,
+                total: dbCached.length,
+                businesses: dbCached,
+                marketMetrics: {
+                    totalReviews,
+                    averageReviews,
+                    averageRating
+                }
+            }
+
+            // Cache in session for next time
+            setCache(cacheKey, payload)
+
+            // Store for report generation
+            if (req.user && req.user.id) {
+                scanResultsCache[req.user.id] = dbCached
+            }
+
+            // Log activity
+            await ScanLog.create({
+                user: userId,
+                userEmail: req.user ? req.user.email : "anonymous",
+                keyword: normalizedKeyword,
+                location: normalizedLocation,
+                source: "cache",
+                resultsCount: dbCached.length
+            })
+
+            res.json({ ...payload, fromCache: true, cacheSource: "mongodb" })
+
+            // Trigger alert generation asynchronously after response
+            setImmediate(() => {
+                try {
+                    locitraEvents.emit("scanCompleted", {
+                        businesses: dbCached,
+                        userId,
+                        keyword: normalizedKeyword,
+                        location: normalizedLocation
+                    })
+                } catch (err) {
+                    console.error("[scanMarket] Event emission error (db cache):", err)
+                }
+            })
+            return
+        }
+
+        // 3. LIVE SCAN (SerpAPI)
+        console.log("[scanMarket] Cache miss → calling live scanner")
+        let rawBusinesses = []
+        try {
+            rawBusinesses = await scanBusinesses(
+                keyword, 
+                location, 
+                500, 
+                userId, 
+                req.user ? req.user.email : "anonymous"
+            )
+            console.log("[scanMarket] Raw businesses from SerpAPI:", rawBusinesses.length)
+        } catch (scanErr) {
+            // fallback logic...
+            const finalCheck = await Business.find({
+                keyword: normalizedKeyword,
+                location: normalizedLocation
+            }).lean()
+
+            if (finalCheck.length > 0) {
+                return res.json({ 
+                    keyword: normalizedKeyword, 
+                    location: normalizedLocation, 
+                    total: finalCheck.length, 
+                    businesses: finalCheck,
+                    message: "Results served from local database (API unavailable)"
+                })
+            }
+            throw scanErr
+        }
 
         const normalized = normalizeBusinesses(rawBusinesses, keyword, location)
-
-        console.log("[scanMarket] Normalized businesses:", normalized.length)
-
+        
         if (normalized.length === 0) {
             return res.json({
-                keyword,
-                location,
-                total: 0,
-                businesses: [],
-                marketMetrics: {
-                    totalReviews: 0,
-                    averageReviews: 0,
-                    averageRating: 0
-                }
+                keyword, location, total: 0, businesses: [],
+                marketMetrics: { totalReviews: 0, averageReviews: 0, averageRating: 0 }
             })
         }
 
@@ -63,33 +188,29 @@ exports.scanMarket = async (req, res) => {
         const limit = planConfig.maxBusinesses
         const limitedNormalized = normalized.slice(0, limit)
 
-        // Persist to DB — skip duplicates silently (ordered: false)
+        // Persist to DB
         try {
             await Business.insertMany(limitedNormalized, { ordered: false })
         } catch (dbErr) {
-            // Duplicate key errors are expected on re-scans — ignore them
-            if (dbErr.code !== 11000) {
-                console.warn("[scanMarket] insertMany warning:", dbErr.message)
-            }
+            if (dbErr.code !== 11000) console.warn("[scanMarket] insertMany warning:", dbErr.message)
         }
 
         // ── Compute enriched market metrics ──────────────────────
-        let totalReviews = 0
-        let totalRating = 0
-        let ratingCount = 0
+        let totalReviewsCount = 0
+        let totalRatingSum = 0
+        let ratingCountNum = 0
 
         for (const b of limitedNormalized) {
-            totalReviews += b.reviews || 0
-
+            totalReviewsCount += b.reviews || 0
             if (b.rating > 0) {
-                totalRating += b.rating
-                ratingCount++
+                totalRatingSum += b.rating
+                ratingCountNum++
             }
         }
 
-        const averageReviews = Math.round(totalReviews / limitedNormalized.length)
-        const averageRating = ratingCount > 0
-            ? Number((totalRating / ratingCount).toFixed(1))
+        const averageReviews = Math.round(totalReviewsCount / limitedNormalized.length)
+        const averageRating = ratingCountNum > 0
+            ? Number((totalRatingSum / ratingCountNum).toFixed(1))
             : 0
 
         const payload = {
@@ -98,7 +219,7 @@ exports.scanMarket = async (req, res) => {
             total: limitedNormalized.length,
             businesses: limitedNormalized,
             marketMetrics: {
-                totalReviews,
+                totalReviews: totalReviewsCount,
                 averageReviews,
                 averageRating
             }
@@ -113,29 +234,42 @@ exports.scanMarket = async (req, res) => {
             }
         }
 
-        // Cache the result for this session
         setCache(cacheKey, payload)
 
-        // Store exactly these live dashboard results for the PDF generator
         if (req.user && req.user.id) {
             scanResultsCache[req.user.id] = limitedNormalized
-            console.log(`[scanMarket] Stored ${limitedNormalized.length} results into report cache for user ${req.user.id}`)
         }
 
         res.json(payload)
 
+        // Trigger alert generation asynchronously after response
+        setImmediate(() => {
+            try {
+                locitraEvents.emit("scanCompleted", {
+                    businesses: limitedNormalized,
+                    userId,
+                    keyword: normalizedKeyword,
+                    location: normalizedLocation
+                })
+            } catch (err) {
+                console.error("[scanMarket] Event emission error (live scan):", err)
+            }
+        })
+
     } catch (error) {
-
         console.error("[scanMarket] FATAL ERROR:", error.stack || error.message || error)
-
         res.status(500).json({
             error: "Market scan failed",
             detail: error.message
         })
-
     }
-
 }
+
+// (getMarketHistory remains the same below)
+exports.getMarketHistory = async (req, res) => {
+    // ...
+}
+
 
 // ─────────────────────────────────────────────
 //  GET /api/market/history?keyword=&location=

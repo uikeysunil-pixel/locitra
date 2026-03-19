@@ -14,8 +14,18 @@ const LeadManager = lazy(() => import("./pages/LeadManager"))
 const Outreach = lazy(() => import("./pages/Outreach"))
 const Billing = lazy(() => import("./pages/Billing"))
 const Reports = lazy(() => import("./pages/Reports"))
+const PublicReport = lazy(() => import("./pages/PublicReport"))
 const ScanPreview = lazy(() => import("./pages/ScanPreview"))
 const LandingPage = lazy(() => import("./pages/LandingPage"))
+const OpportunityHeatmap = lazy(() => import("./pages/dashboard/OpportunityHeatmap"))
+const GoogleMapsRankChecker = lazy(() => import("./pages/tools/GoogleMapsRankChecker"));
+const ToolsHub = lazy(() => import("./pages/tools/ToolsHub"));
+const GoogleBusinessAudit = lazy(() => import("./pages/tools/GoogleBusinessAudit"));
+const CompetitorFinder = lazy(() => import("./pages/tools/CompetitorFinder"));
+const ReviewGapAnalyzer = lazy(() => import("./pages/tools/ReviewGapAnalyzer"));
+const OpportunityFinder = lazy(() => import("./pages/tools/OpportunityFinder"));
+const RankingSeoPage = lazy(() => import("./pages/tools/RankingSeoPage"));
+const MarketGaps = lazy(() => import("./pages/dashboard/MarketGaps"));
 
 /* ── Route guard: redirects to /login if no JWT ─────────── */
 function PrivateRoute({ children }) {
@@ -26,7 +36,7 @@ function PrivateRoute({ children }) {
 /* ── Public-only route: redirect logged-in users away ────── */
 function PublicRoute({ children }) {
   const token = useAuthStore((s) => s.token)
-  return token ? <Navigate to="/" replace /> : children
+  return token ? <Navigate to="/app" replace /> : children
 }
 
 const Placeholder = ({ title }) => (
@@ -35,6 +45,10 @@ const Placeholder = ({ title }) => (
     <p style={{ color: "#64748b", marginTop: "8px" }}>Coming soon.</p>
   </div>
 )
+
+const AdminRoute = lazy(() => import("./components/AdminRoute"))
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"))
+const AlertsDashboard = lazy(() => import("./pages/dashboard/AlertsDashboard"))
 
 function App() {
   return (
@@ -46,6 +60,15 @@ function App() {
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                    {/* Free SEO Tools */}
+                    <Route path="/tools" element={<ToolsHub />} />
+                    <Route path="/tools/google-maps-rank-checker" element={<GoogleMapsRankChecker />} />
+                    <Route path="/tools/google-business-profile-audit" element={<GoogleBusinessAudit />} />
+                    <Route path="/tools/local-competitor-finder" element={<CompetitorFinder />} />
+                    <Route path="/tools/review-gap-analyzer" element={<ReviewGapAnalyzer />} />
+                    <Route path="/tools/local-opportunity-finder" element={<OpportunityFinder />} />
+                    <Route path="/tools/google-maps-ranking-checker/:slug" element={<RankingSeoPage />} />
+          <Route path="/report/:slug" element={<PublicReport />} />
           <Route path="/scan-preview" element={<ScanPreview />} />
 
           {/* ── Protected dashboard routes ── */}
@@ -61,6 +84,14 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <LeadGenerator />
+              </Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/dashboard/opportunity-heatmap" element={
+            <PrivateRoute>
+              <Layout>
+                <OpportunityHeatmap />
               </Layout>
             </PrivateRoute>
           } />
@@ -97,10 +128,10 @@ function App() {
             </PrivateRoute>
           } />
 
-          <Route path="/gaps" element={
+          <Route path="/dashboard/market-gaps" element={
             <PrivateRoute>
               <Layout>
-                <Placeholder title="Market Gaps" />
+                <MarketGaps />
               </Layout>
             </PrivateRoute>
           } />
@@ -108,9 +139,16 @@ function App() {
           <Route path="/alerts" element={
             <PrivateRoute>
               <Layout>
-                <Placeholder title="Alerts" />
+                <AlertsDashboard />
               </Layout>
             </PrivateRoute>
+          } />
+
+          {/* ── Admin Hidden Route ── */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           } />
 
           {/* Catch-all */}

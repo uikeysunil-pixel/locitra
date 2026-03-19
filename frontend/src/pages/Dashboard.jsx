@@ -1,6 +1,8 @@
 import { useMemo, useState, useCallback, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { useMarketStore } from "../store/marketStore"
 import { fetchAnalytics } from "../services/api"
+import useAuthStore from "../store/authStore"
 
 import CityScanner from "../components/CityScanner"
 import FirstScanOnboarding from "../components/FirstScanOnboarding"
@@ -12,6 +14,8 @@ import MarketIntelligence from "../components/MarketIntelligence"
 import ExportCSV from "../components/ExportCSV"
 import LeadFilters from "../components/LeadFilters"
 import Outreach from "./Outreach"
+import LostRevenueDetector from "../components/dashboard/LostRevenueDetector"
+import HeatmapPreview from "../components/dashboard/HeatmapPreview"
 
 /* ── Lifted Outreach Modal Styles ───────────────────────── */
 const modalBackdrop = {
@@ -123,6 +127,63 @@ function OutreachModal({ lead, onClose }) {
             </div>
         </div>
     );
+}
+
+function RecentOpportunitiesWidget() {
+    const [unread, setUnread] = useState(0)
+    const token = useAuthStore(s => s.token)
+
+    useEffect(() => {
+        if (!token) return
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/alerts`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(data => setUnread(data.unreadCount || 0))
+            .catch(() => {})
+    }, [token])
+
+    if (unread === 0) return null
+
+    return (
+        <div className="card" style={recentOppCard}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={recentOppIcon}>🔔</div>
+                <div>
+                    <h3 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
+                        {unread} new SEO opportunities detected today.
+                    </h3>
+                    <p style={{ fontSize: "13px", color: "#64748b" }}>
+                        Weak competitors identified in your recent scans.
+                    </p>
+                </div>
+            </div>
+            <Link to="/alerts" className="btn-primary" style={{ textDecoration: "none", fontSize: "13px", padding: "8px 16px" }}>
+                View Alerts
+            </Link>
+        </div>
+    )
+}
+
+const recentOppCard = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "20px 24px",
+    background: "linear-gradient(90deg, #f8fafc 0%, #eff6ff 100%)",
+    borderLeft: "4px solid #6366f1"
+}
+
+const recentOppIcon = {
+    fontSize: "24px",
+    background: "#fff",
+    width: "44px",
+    height: "44px",
+    borderRadius: "12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)"
 }
 
 export default function Dashboard() {
@@ -302,6 +363,14 @@ Opportunity: ${lead.opportunityScore || 0}`;
                 ))}
             </div>
 
+            {/* ── Dashboard Insights Row (Revenue & Heatmap) ───────── */}
+            {businesses.length > 0 && (
+                <div style={{ ...section, ...twoCol, marginTop: "20px" }}>
+                    <LostRevenueDetector businesses={businesses} />
+                    <HeatmapPreview businesses={businesses} />
+                </div>
+            )}
+
             {/* ── CRM Pipeline Metrics ─────────────────── */}
             {crm && (
                 <div style={crmRow}>
@@ -336,6 +405,11 @@ Opportunity: ${lead.opportunityScore || 0}`;
                     <span style={{ fontWeight: "500" }}>Estimated revenue opportunity:</span> ${stats.revenue ? stats.revenue.toLocaleString() : "9,600"}
                 </div>
             )}
+
+            {/* Recent Opportunities Widget */}
+            <div style={section}>
+                <RecentOpportunitiesWidget />
+            </div>
 
             {/* ── City Business Scanner ────────────────── */}
             <section style={section}>

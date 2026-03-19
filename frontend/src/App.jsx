@@ -20,6 +20,12 @@ const ScanPreview = lazy(() => import("./pages/ScanPreview"))
 const LandingPage = lazy(() => import("./pages/LandingPage"))
 const Pricing = lazy(() => import("./pages/Pricing"))
 const Blog = lazy(() => import("./pages/Blog"))
+const Contact = lazy(() => import("./pages/Contact"))
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"))
+const Terms = lazy(() => import("./pages/Terms"))
+const UseCases = lazy(() => import("./pages/UseCases"))
+const AgencyGuide = lazy(() => import("./pages/AgencyGuide"))
+const Templates = lazy(() => import("./pages/Templates"))
 const OpportunityHeatmap = lazy(() => import("./pages/dashboard/OpportunityHeatmap"))
 const GoogleMapsRankChecker = lazy(() => import("./pages/tools/GoogleMapsRankChecker"));
 const ToolsHub = lazy(() => import("./pages/tools/ToolsHub"));
@@ -63,6 +69,12 @@ function App() {
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/use-cases" element={<UseCases />} />
+          <Route path="/agency-guide" element={<AgencyGuide />} />
+          <Route path="/templates" element={<Templates />} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                     {/* Free SEO Tools */}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import useUiStore from "../../store/uiStore";
 
 const exampleLeads = [
     { name: "Chicago Dental Experts", city: "Chicago", rank: "#7", reviews: 23, opportunity: "High" },
@@ -9,6 +9,7 @@ const exampleLeads = [
 ];
 
 export default function ProductProofSection() {
+    const { openAuthModal } = useUiStore();
     return (
         <section className="py-24 bg-slate-900 relative overflow-hidden">
             {/* Background Accents */}
@@ -97,15 +98,15 @@ export default function ProductProofSection() {
                 </div>
 
                 <div className="text-center">
-                    <Link 
-                        to="/register" 
+                    <button 
+                        onClick={() => openAuthModal("register")}
                         className="inline-flex items-center gap-2 px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xl rounded-2xl shadow-xl shadow-blue-600/20 transition-all duration-300 hover:scale-[1.05] active:scale-95"
                     >
                         Run Free Scan
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
-                    </Link>
+                    </button>
                 </div>
             </div>
         </section>

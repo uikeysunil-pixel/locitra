@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard"
 import LeadGenerator from "./pages/LeadGenerator"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
+import AuthModal from "./components/auth/AuthModal"
 
 // Lazy-load the new SaaS pages (avoids blocking initial load)
 import { lazy, Suspense } from "react"
@@ -155,6 +156,7 @@ function App() {
           <Route path="*" element={<Navigate to="/app" replace />} />
 
         </Routes>
+        <AuthModal />
       </Suspense>
     </BrowserRouter>
   )

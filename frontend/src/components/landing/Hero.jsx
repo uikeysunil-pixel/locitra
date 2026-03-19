@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import useUiStore from "../../store/uiStore";
 
 export default function Hero() {
+    const { openAuthModal } = useUiStore();
     const [keyword, setKeyword] = useState("");
     const [city, setCity] = useState("");
     const [loading, setLoading] = useState(false);
@@ -53,13 +55,13 @@ export default function Hero() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <Link 
-                                to="/register" 
-                                className="group relative w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-300 hover:scale-[1.05] active:scale-95"
+                            <button 
+                                onClick={() => openAuthModal("register")}
+                                className="group relative w-full sm:w-auto px-8 py-4 bg-blue-600 tutorial-step-auth hover:bg-blue-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-300 hover:scale-[1.05] active:scale-95"
                             >
                                 Get Started Free
                                 <span className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                            </Link>
+                            </button>
                         </div>
 
                         {/* Trust Badge */}
@@ -151,12 +153,12 @@ export default function Hero() {
                                             </svg>
                                             Unlock full competitor insights and opportunity scores.
                                         </p>
-                                        <Link 
-                                            to="/register"
+                                        <button 
+                                            onClick={() => openAuthModal("register")}
                                             className="inline-block py-2 px-6 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-500 transition-colors relative z-10"
                                         >
                                             Create Free Account
-                                        </Link>
+                                        </button>
                                     </div>
                                 </div>
                             )}

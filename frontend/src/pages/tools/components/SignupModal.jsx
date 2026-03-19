@@ -21,8 +21,11 @@ const SignupModal = ({ isOpen, onClose, title = "Unlock Full Local SEO Analysis"
                         <Check size={40} strokeWidth={3} />
                     </div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">{title}</h2>
-                    <p className="text-slate-600 mb-8">
+                    <p className="text-slate-600 mb-6">
                         Join 2,000+ business owners using Locitra to dominate their local market.
+                    </p>
+                    <p className="text-sm font-semibold text-blue-700 bg-blue-50 py-3 px-4 rounded-xl mb-8 border border-blue-100">
+                        Create a free account to run this tool and unlock full insights.
                     </p>
                 </div>
 

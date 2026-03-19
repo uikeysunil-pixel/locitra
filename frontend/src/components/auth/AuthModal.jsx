@@ -40,6 +40,13 @@ export default function AuthModal() {
                     <X size={20} />
                 </button>
 
+                {/* Clarity Message */}
+                <div style={{ marginBottom: "24px", textAlign: "center" }}>
+                    <p style={{ fontSize: "14px", color: "#475569", fontWeight: "500", backgroundColor: "#f8fafc", padding: "12px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                        Create a free account to run this tool and unlock full insights.
+                    </p>
+                </div>
+
                 {/* Tabs */}
                 <div style={tabs}>
                     <button 

@@ -17,35 +17,40 @@ const tools = [
         description: "Check your business rankings on Google Maps for specific keywords and locations.",
         icon: Search,
         path: "/tools/google-maps-rank-checker",
-        color: "blue"
+        color: "blue",
+        requiresAuth: true
     },
     {
         name: "Google Business Profile Audit",
         description: "Get a comprehensive audit of your GMB profile and identify optimization gaps.",
         icon: ShieldCheck,
         path: "/tools/google-business-profile-audit",
-        color: "green"
+        color: "green",
+        requiresAuth: true
     },
     {
         name: "Local Competitor Finder",
         description: "Discover who your top local competitors are and see how you stack up against them.",
         icon: Users,
         path: "/tools/local-competitor-finder",
-        color: "purple"
+        color: "purple",
+        requiresAuth: true
     },
     {
         name: "Review Gap Analyzer",
         description: "Analyze the total review gap between you and your top ranking competitors.",
         icon: BarChart3,
         path: "/tools/review-gap-analyzer",
-        color: "orange"
+        color: "orange",
+        requiresAuth: false
     },
     {
         name: "Local SEO Opportunity Finder",
         description: "Find weak competitors in your area that you can easily outrank with better SEO.",
         icon: Target,
         path: "/tools/local-opportunity-finder",
-        color: "red"
+        color: "red",
+        requiresAuth: true
     }
 ];
 
@@ -59,7 +64,7 @@ const ToolsHub = () => {
                         Free Local SEO Tools by <span className="text-blue-600">Locitra</span>
                     </h1>
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10">
-                        Analyze Google Maps rankings, audit business profiles, and find local SEO opportunities in seconds. No credit card required.
+                        Try Locitra tools instantly. Get a quick preview for free — unlock full insights with a free account.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <a href="#tools-grid" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
@@ -84,15 +89,32 @@ const ToolsHub = () => {
                             <p className="text-slate-600 mb-8 flex-grow">
                                 {tool.description}
                             </p>
-                            <Link 
-                                to={tool.path}
-                                className="inline-flex items-center justify-between w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
-                            >
-                                Try Tool
-                                <ArrowRight size={18} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                            </Link>
+                            <div className="space-y-3">
+                                <Link 
+                                    to={tool.path}
+                                    className="inline-flex items-center justify-between w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                                >
+                                    Try Tool
+                                    <ArrowRight size={18} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                                <p className="text-xs text-center text-slate-400 font-medium">
+                                    {tool.requiresAuth ? "Free with account" : "No login required"}
+                                </p>
+                            </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Trust Elements */}
+                <div className="mt-16 flex flex-wrap justify-center gap-x-12 gap-y-4 pt-10 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-500 font-medium">
+                        <CheckCircle2 size={18} className="text-green-500" />
+                        No credit card required
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-500 font-medium">
+                        <CheckCircle2 size={18} className="text-green-500" />
+                        Instant access after signup
+                    </div>
                 </div>
             </div>
 

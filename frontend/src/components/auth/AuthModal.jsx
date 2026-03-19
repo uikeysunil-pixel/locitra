@@ -31,7 +31,7 @@ export default function AuthModal() {
     return (
         <div style={overlay} onClick={closeAuthModal}>
             <div 
-                style={modalContainer} 
+                style={modalContainer(authModalMode)} 
                 onClick={(e) => e.stopPropagation()}
                 className="animate-in zoom-in-95 fade-in duration-200"
             >
@@ -100,17 +100,18 @@ const overlay = {
     padding: "20px"
 }
 
-const modalContainer = {
+const modalContainer = (mode) => ({
     background: "#fff",
     borderRadius: "24px",
     width: "100%",
-    maxWidth: "460px",
+    maxWidth: mode === "register" ? "850px" : "460px",
     maxHeight: "90vh",
     overflowY: "auto",
     position: "relative",
     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-    padding: "40px 32px 32px"
-}
+    padding: "40px 32px 32px",
+    transition: "max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+})
 
 const closeBtn = {
     position: "absolute",

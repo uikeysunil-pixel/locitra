@@ -18,6 +18,8 @@ const Reports = lazy(() => import("./pages/Reports"))
 const PublicReport = lazy(() => import("./pages/PublicReport"))
 const ScanPreview = lazy(() => import("./pages/ScanPreview"))
 const LandingPage = lazy(() => import("./pages/LandingPage"))
+const Pricing = lazy(() => import("./pages/Pricing"))
+const Blog = lazy(() => import("./pages/Blog"))
 const OpportunityHeatmap = lazy(() => import("./pages/dashboard/OpportunityHeatmap"))
 const GoogleMapsRankChecker = lazy(() => import("./pages/tools/GoogleMapsRankChecker"));
 const ToolsHub = lazy(() => import("./pages/tools/ToolsHub"));
@@ -59,6 +61,8 @@ function App() {
 
           {/* ── Public routes ── */}
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/blog" element={<Blog />} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                     {/* Free SEO Tools */}

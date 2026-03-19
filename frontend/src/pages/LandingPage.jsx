@@ -6,6 +6,7 @@ import ProductProofSection from "../components/landing/ProductProofSection";
 import HowItWorks from "../components/landing/HowItWorks";
 import ProductScreens from "../components/landing/ProductScreens";
 import ProgrammaticSEOSection from "../components/landing/ProgrammaticSEOSection";
+import FeaturesSection from "../components/landing/FeaturesSection";
 import TrustSignal from "../components/landing/TrustSignal";
 import FinalCTA from "../components/landing/FinalCTA";
 import LandingFooter from "../components/landing/LandingFooter";
@@ -23,6 +24,7 @@ export default function LandingPage() {
                 <ToolsHubSection />
                 <ProductProofSection />
                 <HowItWorks />
+                <FeaturesSection />
                 <ProductScreens />
                 <ProgrammaticSEOSection />
                 <TrustSignal />

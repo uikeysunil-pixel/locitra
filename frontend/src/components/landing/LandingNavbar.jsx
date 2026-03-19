@@ -1,12 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import useUiStore from "../../store/uiStore";
 
 export default function LandingNavbar() {
+    const navigate = useNavigate();
+    const location = useLocation();
     const { openAuthModal } = useUiStore();
+
+    const handleFeaturesClick = (e) => {
+        e.preventDefault();
+        if (location.pathname === "/") {
+            const el = document.getElementById("features");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+        } else {
+            navigate("/");
+            setTimeout(() => {
+                const el = document.getElementById("features");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        }
+    };
 
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-            <div className="max-w-[1200px] mx-auto px-6 h-16 display flex items-center justify-between">
+            <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2">
                     <span className="text-xl font-extrabold tracking-tight text-slate-900">
@@ -16,9 +32,15 @@ export default function LandingNavbar() {
 
                 {/* Center Menu */}
                 <div className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
-                    <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-                    <a href="#pricing" className="hover:text-blue-600 transition-colors">Pricing</a>
-                    <a href="#blog" className="hover:text-blue-600 transition-colors">Blog</a>
+                    <a 
+                        href="#features" 
+                        onClick={handleFeaturesClick}
+                        className="hover:text-blue-600 transition-colors"
+                    >
+                        Features
+                    </a>
+                    <Link to="/pricing" className="hover:text-blue-600 transition-colors">Pricing</Link>
+                    <Link to="/blog" className="hover:text-blue-600 transition-colors">Blog</Link>
                 </div>
 
                 {/* Right CTA */}

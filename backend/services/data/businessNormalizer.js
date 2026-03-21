@@ -20,7 +20,7 @@ exports.normalizeBusinesses = (places, keyword, location) => {
             address: place.address || "",
             rating: place.rating || 0,
             reviews: place.reviews || 0,
-            phone: place.phone || "",
+            phone: place.phone || place.formatted_phone_number || place.international_phone_number || place.phoneNumber || "",
             website: place.website || "",
             category: place.category || "unknown",
             placeId: place.placeId || undefined,
@@ -41,7 +41,7 @@ exports.normalizeBusiness = (place) => {
         address: place.address || place.formatted_address || "",
         rating: place.rating || 0,
         reviews: place.reviews || place.user_ratings_total || 0,
-        phone: place.phone || "",
+        phone: place.phone || place.formatted_phone_number || place.international_phone_number || place.phoneNumber || "",
         website: place.website || "",
         category: place.category || place.type || "unknown"
     }

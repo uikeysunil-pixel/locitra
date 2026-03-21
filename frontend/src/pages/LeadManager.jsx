@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { fetchMyLeads, updateLead, saveLead, deleteLead, bulkDeleteLeads } from "../services/api"
+import Outreach from "./Outreach"
 
 const STATUS_OPTIONS = ["New", "Contacted", "Interested", "Meeting", "Closed"]
 
@@ -21,6 +22,8 @@ export default function LeadManager() {
     const [search, setSearch] = useState("")
     const [selectedIds, setSelectedIds] = useState([])
 
+    const [outreachLead, setOutreachLead] = useState(null)
+
     const loadLeads = useCallback(async () => {
         setLoading(true)
         const res = await fetchMyLeads()
@@ -30,6 +33,13 @@ export default function LeadManager() {
     }, [])
 
     useEffect(() => { loadLeads() }, [loadLeads])
+
+    // Close outreach modal on ESC
+    useEffect(() => {
+        const handleKey = (e) => { if (e.key === 'Escape') setOutreachLead(null) }
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [])
 
     const patchStatus = async (id, status) => {
         setLeads(prev => prev.map(l => l._id === id ? { ...l, status } : l))
@@ -180,8 +190,8 @@ export default function LeadManager() {
                                             : <span style={noSite}>No Website</span>}
                                     </td>
 
-                                    <td style={{ ...td, fontSize: "12px" }}>{lead.email || <span style={{ color: "#cbd5e1" }}>—</span>}</td>
-                                    <td style={{ ...td, fontSize: "12px" }}>{lead.phone || <span style={{ color: "#cbd5e1" }}>—</span>}</td>
+                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>{lead.email || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>—</span>}</td>
+                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>{lead.phone || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>}</td>
 
                                     <td style={td}>
                                         <span style={scoreBadge(lead.opportunityScore)}>{lead.opportunityScore}</span>
@@ -228,12 +238,20 @@ export default function LeadManager() {
                                     </td>
 
                                     <td style={{...td, textAlign: "center"}}>
-                                        <button
-                                            onClick={() => handleDeleteSingle(lead._id)}
-                                            style={deleteBtn}
-                                        >
-                                            Delete
-                                        </button>
+                                        <div style={{ display: "flex", gap: "6px", justifyContent: "center", flexWrap: "wrap" }}>
+                                            <button
+                                                onClick={() => setOutreachLead(lead)}
+                                                style={outreachBtnStyle}
+                                            >
+                                                🚀 Outreach
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteSingle(lead._id)}
+                                                style={deleteBtn}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
                                     </td>
 
                                 </tr>
@@ -243,7 +261,21 @@ export default function LeadManager() {
                 </div>
                 </div>
             )}
-        </div>
+            {/* ── Outreach Modal ── */}
+        {outreachLead && (
+            <div style={outreachModalBackdrop} onClick={() => setOutreachLead(null)}>
+                <div style={outreachModalCard} onClick={e => e.stopPropagation()}>
+                    <div style={outreachModalHeader}>
+                        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>✉ AI Outreach Generator</h3>
+                        <button onClick={() => setOutreachLead(null)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b" }}>✕</button>
+                    </div>
+                    <div style={{ flex: 1, overflowY: "auto" }}>
+                        <Outreach initialLead={outreachLead} />
+                    </div>
+                </div>
+            </div>
+        )}
+    </div>
     )
 }
 
@@ -267,6 +299,24 @@ const noteInput = { padding: "6px 8px", borderRadius: "6px", border: "1px solid 
 const saveBtn = { padding: "4px 8px", borderRadius: "6px", background: "#6366f1", color: "#fff", border: "none", cursor: "pointer", fontSize: "12px" }
 const deleteBtn = { padding: "6px 10px", borderRadius: "6px", background: "#fee2e2", color: "#ef4444", border: "1px solid #fca5a5", cursor: "pointer", fontSize: "11px", fontWeight: "700", transition: "all 0.2s" }
 const bulkDeleteBtn = { padding: "8px 16px", borderRadius: "8px", background: "#ef4444", color: "#fff", border: "none", fontSize: "13px", fontWeight: "600", transition: "opacity 0.2s" }
+const outreachBtnStyle = { padding: "6px 10px", borderRadius: "6px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", transition: "all 0.2s" }
+
+const outreachModalBackdrop = {
+    position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+    background: "rgba(15, 23, 42, 0.65)", display: "flex", justifyContent: "center", alignItems: "center",
+    zIndex: 10000, padding: "20px"
+}
+const outreachModalCard = {
+    background: "#fff", borderRadius: "16px",
+    width: "100%", maxWidth: "900px", maxHeight: "90vh",
+    display: "flex", flexDirection: "column",
+    boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden"
+}
+const outreachModalHeader = {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "20px 24px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc"
+}
+
 const emptyState = { padding: "60px 24px", textAlign: "center", color: "#94a3b8", fontSize: "14px" }
 
 const scoreBadge = (score = 0) => ({

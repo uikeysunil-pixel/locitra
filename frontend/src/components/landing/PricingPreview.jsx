@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
 import { plans } from "../../config/plans";
+import useAuthStore from "../../store/authStore";
 
 export default function PricingPreview() {
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === "admin";
+
+    if (isAdmin) return null;
+
     return (
         <section id="pricing" className="py-24 bg-slate-50 border-b border-slate-200">
             <div className="max-w-[1200px] mx-auto px-6">

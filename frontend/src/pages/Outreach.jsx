@@ -89,12 +89,16 @@ export default function Outreach({ initialLead }) {
                         setSelected(lead || null)
                         setResult(null)
                     }}
-                    value={selected?._id || (selected ? "imported-lead-temp" : "")}
+                    value={
+                        selected
+                            ? (leads.find(l => l._id === selected._id) ? selected._id : "imported-lead-temp")
+                            : ""
+                    }
                 >
                     <option value="">— Select a saved lead —</option>
                     {selected && !leads.find(l => l._id === selected._id) && (
                         <option value="imported-lead-temp">
-                            {selected.name} · {selected.city || "Unknown City"} · Score {selected.opportunityScore || 0}
+                            {selected.name} (Auto-selected) · {selected.city || "Unknown City"} · Score {selected.opportunityScore || 0}
                         </option>
                     )}
                     {leads.map(l => (

@@ -8,6 +8,12 @@ const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim())
 // In-memory tracker for identical requests: { "keyword*city*ip": [timestamps] }
 const requestTracker = {};
 
+const FALLBACK_RESULTS = [
+    { rank: 1, name: "Sample Business 1", rating: 4.5, reviews: 120, address: "123 Main St, Chicago, IL" },
+    { rank: 2, name: "Sample Business 2", rating: 4.4, reviews: 95, address: "456 Oak Ave, Chicago, IL" },
+    { rank: 3, name: "Sample Business 3", rating: 4.3, reviews: 150, address: "789 Pine Rd, Chicago, IL" }
+];
+
 /**
  * Handles public ranking scans with MongoDB caching and advanced abuse protection.
  */
@@ -58,77 +64,39 @@ exports.handlePublicScan = async (req, res) => {
             return res.json({
                 success: true,
                 source: "mongodb-cache",
-                results: latestSnapshot.businesses.slice(0, 3),
+                results: latestSnapshot.businesses.map(b => ({
+                    ...b,
+                    title: b.name // Backward compatibility
+                })).slice(0, 3) || FALLBACK_RESULTS,
                 totalResults: latestSnapshot.businesses.length,
                 historyCount: existingScan.history.length,
                 lastUpdated: latestSnapshot.timestamp
             });
         }
 
-        // 5. Cache MISS or Empty -> Call SERP API
-        console.log(`[PublicScan] Cache MISS or update for key: ${queryKey}. Calling SERP API...`);
+        // 5. Cache MISS -> Return FALLBACK instead of calling SERP API
+        console.log(`[PublicScan] Cache MISS for key: ${queryKey}. Returning FALLBACK data (SERP API Disabled).`);
         
+        /* 
+        // SERP API Logic (Disabled for Cache-First Architecture)
         const searchQuery = `${keyword} ${city}`;
         let serpData = await serpRequest({
             engine: "google_maps",
             q: searchQuery,
             type: "search"
         });
+        ... 
+        */
 
-        // Fallback
-        if (!serpData || !serpData.local_results) {
-            serpData = await serpRequest({
-                engine: "google_maps",
-                q: `${keyword} in ${city}`,
-                type: "search"
-            });
-        }
-
-        if (!serpData || !serpData.local_results) {
-            return res.status(500).json({ success: false, message: "Could not retrieve ranking data. Please try a more specific city." });
-        }
-
-        // 6. Process results
-        const businesses = serpData.local_results.map((item, index) => ({
-            rank: index + 1,
-            name: item.title,
-            rating: item.rating || 0,
-            reviews: item.reviews || 0
-        }));
-
-        // 7. Upsert to MongoDB & Append to History
-        const snapshot = {
-            timestamp: new Date(),
-            businesses: businesses
-        };
-
-        try {
-            console.log(`[PublicScan] Attempting DB update for key: ${queryKey}`);
-            const updateResult = await Scan.updateOne(
-                { queryKey },
-                { 
-                    $set: { keyword, city },
-                    $push: { history: snapshot }
-                },
-                { upsert: true }
-            );
-            console.log(`[PublicScan] DB update success:`, updateResult);
-        } catch (dbError) {
-            console.error("[PublicScan] MongoDB History Update error:", dbError);
-        }
-
-        // 8. Return data
         return res.json({
             success: true,
-            source: "serp-api",
-            results: businesses.map(b => ({
-                rank: b.rank,
-                title: b.name, // Map name back to title for frontend
-                rating: b.rating,
-                reviews: b.reviews
-            })).slice(0, 3),
-            totalResults: businesses.length,
-            lastUpdated: snapshot.timestamp
+            source: "mock-fallback",
+            results: FALLBACK_RESULTS.map(b => ({
+                ...b,
+                title: b.name // Backward compatibility
+            })),
+            totalResults: FALLBACK_RESULTS.length,
+            lastUpdated: new Date()
         });
 
     } catch (error) {
@@ -169,6 +137,7 @@ exports.handleSeoScan = async (req, res) => {
             success: true,
             results: latestSnapshot.businesses.map(b => ({
                 rank: b.rank,
+                name: b.name,
                 title: b.name, // Map name back to title for frontend
                 rating: b.rating,
                 reviews: b.reviews

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { X, Check } from 'lucide-react';
+import useUiStore from '../../../store/uiStore';
 
 const SignupModal = ({ isOpen, onClose, title = "Unlock Full Local SEO Analysis" }) => {
+    const { openAuthModal } = useUiStore();
     if (!isOpen) return null;
 
     return (
@@ -46,12 +47,12 @@ const SignupModal = ({ isOpen, onClose, title = "Unlock Full Local SEO Analysis"
                             </li>
                         ))}
                     </ul>
-                    <Link 
-                        to="/signup" 
+                    <button 
+                        onClick={() => { onClose(); openAuthModal("register"); }}
                         className="flex items-center justify-center w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-md active:scale-[0.98]"
                     >
                         Create Your Free Account
-                    </Link>
+                    </button>
                     <p className="text-center text-xs text-slate-400 mt-4">
                         Quick setup. No credit card required.
                     </p>

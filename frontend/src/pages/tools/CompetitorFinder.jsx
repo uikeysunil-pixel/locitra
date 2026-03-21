@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import { Users, Search, AlertCircle, Loader2, Star, MessageSquare } from 'lucide-react';
-import LockedSection from './components/LockedSection';
+import LockedReportGate from './components/LockedReportGate';
 import SignupModal from './components/SignupModal';
+import useAuthStore from '../../store/authStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const CompetitorFinder = () => {
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === "admin";
     const [keyword, setKeyword] = useState('');
     const [city, setCity] = useState('');
     const [loading, setLoading] = useState(false);
@@ -19,7 +22,7 @@ const CompetitorFinder = () => {
         e.preventDefault();
         
         const lastScan = localStorage.getItem('locitra_public_competitors');
-        if (lastScan) {
+        if (!isAdmin && lastScan) {
             setShowModal(true);
             return;
         }
@@ -106,7 +109,7 @@ const CompetitorFinder = () => {
                                     {results.map((biz, i) => (
                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-6 py-5">
-                                                <div className="font-bold text-slate-900">{biz.title}</div>
+                                                <div className="font-bold text-slate-900">{biz.name || biz.title}</div>
                                                 <div className="text-xs text-slate-400 mt-1">{biz.address}</div>
                                             </td>
                                             <td className="px-6 py-5">
@@ -127,15 +130,23 @@ const CompetitorFinder = () => {
                             </table>
                         </div>
 
-                        <LockedSection 
-                            title="Discover All Competitors and Gap Insights"
+                        <LockedReportGate 
+                            toolName="Competitor Finder"
                             features={[
                                 "Full market density report",
                                 "Competitor pricing insights",
                                 "Historical ranking maps",
                                 "Review sentiment analysis"
                             ]}
-                        />
+                        >
+                            {/* Premium Content */}
+                            <div className="mt-8 p-8 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-center text-center">
+                                <div>
+                                    <h4 className="font-bold text-blue-900 mb-2">Market Layout Unlocked</h4>
+                                    <p className="text-blue-600 text-sm">You can now see the complete landscape of local competitors.</p>
+                                </div>
+                            </div>
+                        </LockedReportGate>
                     </div>
                 ) : (
                     <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">

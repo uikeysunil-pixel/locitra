@@ -125,33 +125,33 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                 </div>
 
                 <div style={tableWrapper}>
-                    <table>
+                    <table style={tableStyle}>
                         <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
                             <tr>
-                                <th>#</th>
-                                <th>Business</th>
-                                <th>Rating</th>
-                                <th>Reviews</th>
-                                <th>Website</th>
-                                <th>Phone</th>
-                                <th>Opportunity</th>
-                                <th>Lead Value</th>
-                                <th>Maps</th>
-                                <th>Contact</th>
-                                <th>Action</th>
+                                <th style={{ ...thStyle, width: "36px" }}>#</th>
+                                <th style={{ ...thStyle, minWidth: "160px" }}>Business</th>
+                                <th style={{ ...thStyle, minWidth: "80px" }}>Rating</th>
+                                <th style={{ ...thStyle, minWidth: "80px" }}>Reviews</th>
+                                <th style={{ ...thStyle, minWidth: "100px" }}>Website</th>
+                                <th style={{ ...thStyle, minWidth: "110px" }}>Phone</th>
+                                <th style={{ ...thStyle, minWidth: "100px" }}>Opportunity</th>
+                                <th style={{ ...thStyle, minWidth: "90px" }}>Lead Value</th>
+                                <th style={{ ...thStyle, minWidth: "70px" }}>Maps</th>
+                                <th style={{ ...thStyle, minWidth: "80px" }}>Contact</th>
+                                <th style={{ ...thStyle, width: "120px", textAlign: "center" }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {rows.map((lead, i) => {
                                 const leadValue = Math.round((lead.opportunityScore ?? 0) * 5)
                                 return (
-                                    <tr key={lead.placeId || `${lead.name}-${i}`}>
+                                    <tr key={lead.placeId || `${lead.name}-${i}`} style={trStyle}>
 
-                                        <td style={{ color: "#94a3b8", fontSize: "12px", width: "36px" }}>
+                                        <td style={{ ...tdStyle, color: "#94a3b8", fontSize: "12px", width: "36px", textAlign: "center" }}>
                                             {i + 1}
                                         </td>
 
-                                        <td>
+                                        <td style={tdStyle}>
                                             <div style={bizName}>{lead.name || "Unknown"}</div>
                                             {lead.category && (
                                                 <div style={bizCat}>{lead.category}</div>
@@ -161,15 +161,15 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                             )}
                                         </td>
 
-                                        <td>
+                                        <td style={tdStyle}>
                                             <span style={ratingStyle}>
                                                 ⭐ {lead.rating ?? "–"}
                                             </span>
                                         </td>
 
-                                        <td>{(lead.reviews ?? lead.totalReviews ?? 0).toLocaleString()}</td>
+                                        <td style={tdStyle}>{(lead.reviews ?? lead.totalReviews ?? 0).toLocaleString()}</td>
 
-                                        <td>
+                                        <td style={tdStyle}>
                                             {lead.website ? (
                                                 <a
                                                     href={lead.website}
@@ -184,17 +184,17 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                             )}
                                         </td>
 
-                                        <td style={{ color: "#475569", fontSize: "13px" }}>
-                                            {lead.phone || <span style={{ color: "#cbd5e1" }}>—</span>}
+                                        <td style={{ ...tdStyle, color: "#475569", fontSize: "13px" }}>
+                                            {lead.phone || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>}
                                         </td>
 
-                                        <td><OpBadge score={lead.opportunityScore ?? 0} /></td>
+                                        <td style={tdStyle}><OpBadge score={lead.opportunityScore ?? 0} /></td>
 
-                                        <td>
+                                        <td style={tdStyle}>
                                             <span style={leadValueStyle}>${leadValue}</span>
                                         </td>
 
-                                        <td>
+                                        <td style={tdStyle}>
                                             <a
                                                 href={
                                                     lead.mapsLink ||
@@ -209,7 +209,7 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                         </td>
 
                                         {/* Contact Info button */}
-                                        <td>
+                                        <td style={tdStyle}>
                                             <button
                                                 onClick={() => setSelectedBusiness(lead)}
                                                 style={contactBtn}
@@ -367,7 +367,38 @@ const tableWrapper = {
     overflowX: "auto",
     overflowY: "auto",
     maxHeight: "600px",
-    marginTop: "16px"
+    marginTop: "16px",
+    borderRadius: "0 0 16px 16px",
+    borderTop: "1px solid #e2e8f0"
+}
+
+/* Base structural table styles matching other pages */
+const tableStyle = { 
+    width: "100%", 
+    borderCollapse: "collapse", 
+    fontSize: "13px", 
+    tableLayout: "auto" 
+}
+const thStyle = { 
+    padding: "12px 14px", 
+    textAlign: "left", 
+    background: "#f8fafc", 
+    fontWeight: "700", 
+    color: "#475569", 
+    fontSize: "11px", 
+    textTransform: "uppercase", 
+    letterSpacing: "0.05em", 
+    borderBottom: "1px solid #e2e8f0", 
+    whiteSpace: "nowrap" 
+}
+const tdStyle = { 
+    padding: "12px 14px", 
+    color: "#0f172a", 
+    borderBottom: "1px solid #f1f5f9", 
+    verticalAlign: "middle" 
+}
+const trStyle = { 
+    transition: "background .1s" 
 }
 
 const bizName = { fontWeight: "600", fontSize: "14px" }

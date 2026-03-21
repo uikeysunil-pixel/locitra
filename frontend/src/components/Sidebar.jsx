@@ -9,11 +9,20 @@ const NAV_MAIN = [
     { to: "/alerts", icon: "🔔", label: "Alerts" },
 ]
 
-const NAV_TOOLS = [
+const NAV_MANAGEMENT = [
     { to: "/crm", icon: "📋", label: "Lead CRM" },
     { to: "/outreach", icon: "✉", label: "Outreach" },
     { to: "/reports", icon: "📊", label: "Reports" },
     { to: "/billing", icon: "💳", label: "Billing" },
+]
+
+const NAV_SEO_TOOLS = [
+    { to: "/tools/google-maps-rank-checker", icon: "📍", label: "Maps Checker" },
+    { to: "/tools/google-business-profile-audit", icon: "🏢", label: "GBP Audit" },
+    { to: "/tools/local-competitor-finder", icon: "🔍", label: "Comp Finder" },
+    { to: "/tools/review-gap-analyzer", icon: "⭐", label: "Review Gap" },
+    { to: "/tools/local-opportunity-finder", icon: "💡", label: "Opp Finder" },
+    { to: "/dashboard/tools/website-presence", icon: "🌐", label: "Presence Checker" },
 ]
 
 export default function Sidebar() {
@@ -75,15 +84,20 @@ export default function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav>
+            <nav style={navContainer} className="sidebar-nav">
                 <p style={navLabel}>NAVIGATION</p>
                 <ul style={menuStyle}>
                     {NAV_MAIN.map(n => <NavItem key={n.to} {...n} />)}
                 </ul>
 
+                <p style={navLabel}>MANAGEMENT</p>
+                <ul style={menuStyle}>
+                    {NAV_MANAGEMENT.map(n => <NavItem key={n.to} {...n} />)}
+                </ul>
+
                 <p style={navLabel}>TOOLS</p>
                 <ul style={menuStyle}>
-                    {NAV_TOOLS.map(n => <NavItem key={n.to} {...n} />)}
+                    {NAV_SEO_TOOLS.map(n => <NavItem key={n.to} {...n} />)}
                 </ul>
             </nav>
 
@@ -125,7 +139,8 @@ const sidebarStyle = {
     top: 0,
     left: 0,
     zIndex: 100,
-    borderRight: "1px solid rgba(255,255,255,0.05)"
+    borderRight: "1px solid rgba(255,255,255,0.05)",
+    overflow: "hidden"
 }
 
 const logoWrap = {
@@ -207,9 +222,15 @@ const activeDot = {
     marginLeft: "auto"
 }
 
+const navContainer = {
+    flex: 1,
+    overflowY: "auto",
+    paddingBottom: "20px"
+}
+
 const footerStyle = {
-    marginTop: "auto",
-    padding: "16px 12px 24px"
+    padding: "16px 12px 24px",
+    borderTop: "1px solid rgba(255,255,255,0.05)"
 }
 
 const footerCard = {

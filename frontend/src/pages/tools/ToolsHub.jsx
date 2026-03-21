@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import useUiStore from '../../store/uiStore';
 import { Link } from 'react-router-dom';
 import { 
     Search, 
@@ -8,8 +9,11 @@ import {
     Target, 
     ArrowRight,
     CheckCircle2,
-    ChevronRight
+    ChevronRight,
+    Globe
 } from 'lucide-react';
+import useAuthStore from '../../store/authStore';
+import ToolPreviewModal from '../../components/tools/ToolPreviewModal';
 
 const tools = [
     {
@@ -51,10 +55,39 @@ const tools = [
         path: "/tools/local-opportunity-finder",
         color: "red",
         requiresAuth: true
+    },
+    {
+        name: "Website Presence Checker",
+        description: "Check if a business has a website and analyze its online presence across platforms.",
+        icon: Globe,
+        path: "/tools/website-presence",
+        color: "indigo",
+        requiresAuth: true
     }
 ];
 
 const ToolsHub = () => {
+    const { user } = useAuthStore();
+    const { openAuthModal } = useUiStore();
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [selectedTool, setSelectedTool] = useState(null);
+
+    const handleToolClick = (e, tool) => {
+        // If user is already logged in, let the Link work normally
+        if (user) {
+            return;
+        }
+
+        // Otherwise (unauthenticated), prevent navigation and show preview modal
+        // Store intent for post-login redirect
+        const slug = tool.path.split("/").pop();
+        localStorage.setItem("selectedTool", slug);
+        
+        e.preventDefault();
+        setSelectedTool(tool);
+        setIsPreviewModalOpen(true);
+    };
+
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Hero Section */}
@@ -70,9 +103,9 @@ const ToolsHub = () => {
                         <a href="#tools-grid" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
                             Try a Free Tool
                         </a>
-                        <Link to="/signup" className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm">
+                        <button onClick={() => openAuthModal("register")} className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm">
                             Create Free Account
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -92,18 +125,27 @@ const ToolsHub = () => {
                             <div className="space-y-3">
                                 <Link 
                                     to={tool.path}
+                                    onClick={(e) => handleToolClick(e, tool)}
                                     className="inline-flex items-center justify-between w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
                                 >
                                     Try Tool
                                     <ArrowRight size={18} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                                 <p className="text-xs text-center text-slate-400 font-medium">
-                                    {tool.requiresAuth ? "Free with account" : "No login required"}
+                                    {tool.requiresAuth ? "Free preview available" : "No login required"}
                                 </p>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Preview Modal */}
+                <ToolPreviewModal 
+                    isOpen={isPreviewModalOpen} 
+                    onClose={() => setIsPreviewModalOpen(false)} 
+                    toolName={selectedTool?.name} 
+                    toolPath={selectedTool?.path}
+                />
 
                 {/* Trust Elements */}
                 <div className="mt-16 flex flex-wrap justify-center gap-x-12 gap-y-4 pt-10 border-t border-slate-100">
@@ -171,9 +213,9 @@ const ToolsHub = () => {
                                     </li>
                                 ))}
                             </ul>
-                            <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg">
+                            <button onClick={() => openAuthModal("register")} className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg">
                                 Create Free Account Now
-                            </Link>
+                            </button>
                         </div>
                         <div className="hidden lg:block relative">
                             <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full"></div>

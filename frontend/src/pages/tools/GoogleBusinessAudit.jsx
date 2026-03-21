@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import { ShieldCheck, Info, Search, AlertCircle, Loader2 } from 'lucide-react';
-import LockedSection from './components/LockedSection';
+import LockedReportGate from './components/LockedReportGate';
 import SignupModal from './components/SignupModal';
 import PricingPreview from '../../components/landing/PricingPreview';
+import useAuthStore from '../../store/authStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const GoogleBusinessAudit = () => {
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === "admin";
     const [businessName, setBusinessName] = useState('');
     const [city, setCity] = useState('');
     const [loading, setLoading] = useState(false);
@@ -19,9 +22,9 @@ const GoogleBusinessAudit = () => {
     const handleAudit = async (e) => {
         e.preventDefault();
         
-        // Check session limit
+        // Check session limit (Skip for admins)
         const lastScan = localStorage.getItem('locitra_public_audit');
-        if (lastScan) {
+        if (!isAdmin && lastScan) {
             setShowModal(true);
             return;
         }
@@ -170,15 +173,21 @@ const GoogleBusinessAudit = () => {
                             </div>
                         </div>
 
-                        <LockedSection 
-                            title="Unlock the Complete Optimization Roadmap"
+                        <LockedReportGate 
+                            toolName="Google Business Audit"
                             features={[
                                 "Category optimization tips",
                                 "Keyword gap analysis",
                                 "Photo quantity vs competitors",
                                 "Review sentiment analysis"
                             ]}
-                        />
+                        >
+                            {/* Premium Content */}
+                            <div className="mt-8 p-8 bg-blue-50/50 rounded-2xl border border-blue-100/50 text-center">
+                                <h4 className="font-bold text-blue-900 mb-2">Strategy Roadmap Unlocked</h4>
+                                <p className="text-blue-600 text-sm">Full optimization steps and AI recommendations are now visible.</p>
+                            </div>
+                        </LockedReportGate>
                     </div>
                 ) : (
                     <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">

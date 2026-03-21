@@ -42,7 +42,10 @@ exports.getMarketGaps = async (req, res) => {
 
         // Get the latest history entry
         const latestEntry = scan.history[scan.history.length - 1]
-        const businesses = latestEntry.businesses
+        const businesses = latestEntry.businesses.map(b => ({
+            ...b,
+            title: b.name // Backward compatibility
+        }))
 
         // 2. Extract business data and detect weak competition
         // Rules: rating < 4.3, reviews < 100, rank between 1 and 5

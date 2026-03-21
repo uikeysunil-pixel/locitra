@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom"
+import { useEffect } from "react"
 
 import useAuthStore from "./store/authStore"
 
@@ -34,6 +35,8 @@ const CompetitorFinder = lazy(() => import("./pages/tools/CompetitorFinder"));
 const ReviewGapAnalyzer = lazy(() => import("./pages/tools/ReviewGapAnalyzer"));
 const OpportunityFinder = lazy(() => import("./pages/tools/OpportunityFinder"));
 const RankingSeoPage = lazy(() => import("./pages/tools/RankingSeoPage"));
+const WebsitePresenceChecker = lazy(() => import("./pages/tools/WebsitePresenceChecker"));
+const WebsitePresenceTool = lazy(() => import("./pages/dashboard/tools/WebsitePresenceTool"));
 const MarketGaps = lazy(() => import("./pages/dashboard/MarketGaps"));
 
 /* ── Route guard: redirects to /login if no JWT ─────────── */
@@ -42,10 +45,32 @@ function PrivateRoute({ children }) {
   return token ? children : <Navigate to="/login" replace />
 }
 
+/* ── Redirect Handler: Manages post-login tool redirection ── */
+function RedirectHandler() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const selectedTool = localStorage.getItem("selectedTool");
+    if (selectedTool) {
+      localStorage.removeItem("selectedTool");
+      // Check if it's the rank checker (handle both slug and direct dash)
+      if (selectedTool.includes("rank-checker") || selectedTool.includes("ranking-checker")) {
+        navigate("/tools/google-maps-rank-checker", { replace: true });
+      } else {
+        navigate(`/tools/${selectedTool}`, { replace: true });
+      }
+    } else {
+      navigate("/app", { replace: true });
+    }
+  }, [navigate]);
+
+  return <div style={{ padding: "40px" }}>Redirecting...</div>;
+}
+
 /* ── Public-only route: redirect logged-in users away ────── */
 function PublicRoute({ children }) {
   const token = useAuthStore((s) => s.token)
-  return token ? <Navigate to="/app" replace /> : children
+  return token ? <RedirectHandler /> : children
 }
 
 const Placeholder = ({ title }) => (
@@ -84,6 +109,7 @@ function App() {
                     <Route path="/tools/local-competitor-finder" element={<CompetitorFinder />} />
                     <Route path="/tools/review-gap-analyzer" element={<ReviewGapAnalyzer />} />
                     <Route path="/tools/local-opportunity-finder" element={<OpportunityFinder />} />
+                    <Route path="/tools/website-presence" element={<WebsitePresenceChecker />} />
                     <Route path="/tools/google-maps-ranking-checker/:slug" element={<RankingSeoPage />} />
           <Route path="/report/:slug" element={<PublicReport />} />
           <Route path="/scan-preview" element={<ScanPreview />} />
@@ -109,6 +135,14 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <OpportunityHeatmap />
+              </Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/dashboard/tools/website-presence" element={
+            <PrivateRoute>
+              <Layout>
+                <WebsitePresenceTool />
               </Layout>
             </PrivateRoute>
           } />

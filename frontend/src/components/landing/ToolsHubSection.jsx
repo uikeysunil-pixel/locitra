@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
+import useUiStore from "../../store/uiStore";
+import ToolPreviewModal from "../tools/ToolPreviewModal";
 
 const tools = [
     {
@@ -52,10 +55,40 @@ const tools = [
             </svg>
         ),
         link: "/tools/opportunity-finder"
+    },
+    {
+        title: "Website Presence Checker",
+        desc: "Check if a business has a website and analyze its online presence across platforms.",
+        icon: (
+            <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9h18" />
+            </svg>
+        ),
+        link: "/tools/website-presence"
     }
 ];
 
 export default function ToolsHubSection() {
+    const { user } = useAuthStore();
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [selectedTool, setSelectedTool] = useState(null);
+
+    const handleToolClick = (e, tool) => {
+        // If user is already logged in, let the Link work normally
+        if (user) {
+            return;
+        }
+
+        // Otherwise, prevent navigation and show preview modal for ALL tools
+        // Store intent for post-login redirect
+        const slug = tool.link.split("/").pop();
+        localStorage.setItem("selectedTool", slug);
+
+        e.preventDefault();
+        setSelectedTool({ name: tool.title, path: tool.link });
+        setIsPreviewModalOpen(true);
+    };
+
     return (
         <section id="tools" className="py-24 bg-white relative overflow-hidden">
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
@@ -66,7 +99,7 @@ export default function ToolsHubSection() {
                         Free Local SEO Tools
                     </h2>
                     <p className="text-xl text-slate-600 leading-relaxed">
-                        Try Locitra tools instantly. No signup required. Uncover insights in seconds.
+                        Try Locitra tools instantly. Get a quick preview for free — unlock full insights with a free account.
                     </p>
                 </div>
 
@@ -78,25 +111,32 @@ export default function ToolsHubSection() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-4">{tool.title}</h3>
                             <p className="text-slate-600 mb-8 line-clamp-2">{tool.desc}</p>
-                            <Link 
-                                to={tool.link} 
-                                className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition-colors"
-                            >
-                                Try Tool
-                                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
+                            <div className="flex flex-col gap-3">
+                                <Link 
+                                    to={tool.link} 
+                                    onClick={(e) => handleToolClick(e, tool)}
+                                    className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition-colors"
+                                >
+                                    Try Tool
+                                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                                <p className="text-xs text-slate-400 font-medium">
+                                    {tool.title === "Review Gap Analyzer" ? "No login required" : "Free preview available"}
+                                </p>
+                            </div>
                         </div>
                     ))}
                     
-                    {/* Coming Soon Card */}
-                    <div className="p-8 bg-dashed border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-center opacity-60">
-                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-slate-400 font-bold">+</span>
-                        </div>
-                        <p className="font-semibold text-slate-400">More Tools Coming Soon</p>
-                    </div>
+                    {/* Preview Modal */}
+                    <ToolPreviewModal 
+                        isOpen={isPreviewModalOpen} 
+                        onClose={() => setIsPreviewModalOpen(false)} 
+                        toolName={selectedTool?.name} 
+                        toolPath={selectedTool?.path}
+                    />
+                    
                 </div>
             </div>
         </section>

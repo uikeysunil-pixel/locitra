@@ -89,7 +89,17 @@ export default function LoginForm({ onSuccess }) {
                 if (onSuccess) {
                     onSuccess()
                 } else {
-                    navigate("/app")
+                    const selectedTool = localStorage.getItem("selectedTool");
+                    if (selectedTool) {
+                        localStorage.removeItem("selectedTool");
+                        if (selectedTool.includes("rank-checker") || selectedTool.includes("ranking-checker")) {
+                            navigate("/tools/google-maps-rank-checker", { replace: true });
+                        } else {
+                            navigate(`/tools/${selectedTool}`, { replace: true });
+                        }
+                    } else {
+                        navigate("/app")
+                    }
                 }
             } else {
                 setError(response.data.message || "Login failed")

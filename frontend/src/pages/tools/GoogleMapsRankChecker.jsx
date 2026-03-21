@@ -5,14 +5,15 @@ import { Helmet } from "react-helmet";
 import { Search, MapPin, Star, MessageSquare, Loader2, AlertCircle } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 import PricingPreview from "../../components/landing/PricingPreview";
-import LockedSection from "./components/LockedSection";
+import LockedReportGate from "./components/LockedReportGate";
 import RankingHistoryChart from "../../components/RankingHistoryChart";
 import SignupModal from "./components/SignupModal";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 
 const GoogleMapsRankChecker = () => {
-    const { token } = useAuthStore();
+    const { token, user } = useAuthStore();
+    const isAdmin = user?.role === "admin";
     const [keyword, setKeyword] = useState("");
     const [city, setCity] = useState("");
     const [loading, setLoading] = useState(false);
@@ -24,9 +25,9 @@ const GoogleMapsRankChecker = () => {
         e.preventDefault();
         setError("");
         
-        // Check session limit
+        // Check session limit (Skip for admins)
         const lastScan = localStorage.getItem("locitra_public_scan");
-        if (lastScan) {
+        if (!isAdmin && lastScan) {
             setShowLimitModal(true);
             return;
         }
@@ -130,7 +131,7 @@ const GoogleMapsRankChecker = () => {
                                         <tr key={biz.rank} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-6 py-5 font-black text-2xl text-blue-600">#{biz.rank}</td>
                                             <td className="px-6 py-5">
-                                                <div className="font-bold text-slate-900">{biz.title}</div>
+                                                <div className="font-bold text-slate-900">{biz.name || biz.title}</div>
                                                 <div className="text-xs text-slate-400 mt-1">{biz.address}</div>
                                             </td>
                                             <td className="px-6 py-5">
@@ -154,19 +155,27 @@ const GoogleMapsRankChecker = () => {
                         <div className="mt-8">
                             <RankingHistoryChart 
                                 history={results.history || []} 
-                                isLocked={!token} 
+                                isLocked={!token && !isAdmin} 
                             />
                         </div>
 
-                        <LockedSection 
-                            title="Unlock Full Local SEO Analysis"
+                        <LockedReportGate 
+                            toolName="Google Maps Rank Checker"
                             features={[
                                 "Full competitor list (top 20+)",
                                 "Interactive ranking movement maps",
                                 "AI-powered SEO insights",
                                 "Revenue & Review growth trends"
                             ]}
-                        />
+                        >
+                            {/* Premium Content */}
+                            <div className="mt-8 p-8 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-center text-center">
+                                <div>
+                                    <h4 className="font-bold text-blue-900 mb-2">Full Ranking Intelligence Unlocked</h4>
+                                    <p className="text-blue-600 text-sm">You can now see the complete market layout and AI growth tips.</p>
+                                </div>
+                            </div>
+                        </LockedReportGate>
                     </div>
                 ) : (
                     <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">

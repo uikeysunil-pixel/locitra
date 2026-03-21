@@ -258,8 +258,8 @@ export default function LeadGenerator() {
                                             }
                                         </td>
 
-                                        <td style={{ fontSize: "13px", color: "#475569" }}>
-                                            {lead.phone || <span style={{ color: "#cbd5e1" }}>—</span>}
+                                        <td style={{ fontSize: "13px", color: "#475569", whiteSpace: "nowrap" }}>
+                                            {lead.phone || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>}
                                         </td>
 
                                         <td style={{ fontSize: "13px", color: "#475569", maxWidth: "180px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

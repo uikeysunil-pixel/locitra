@@ -1,11 +1,15 @@
 import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { X } from "lucide-react"
 import LoginForm from "./LoginForm"
 import RegisterForm from "./RegisterForm"
 import useUiStore from "../../store/uiStore"
+import useAuthStore from "../../store/authStore"
 
 export default function AuthModal() {
     const { isAuthModalOpen, authModalMode, closeAuthModal, setAuthModalMode } = useUiStore()
+    const { user } = useAuthStore()
+    const navigate = useNavigate()
 
     // Disable background scroll
     useEffect(() => {
@@ -16,6 +20,24 @@ export default function AuthModal() {
         }
         return () => { document.body.style.overflow = "unset" }
     }, [isAuthModalOpen])
+
+    // Handle post-login redirect intent
+    useEffect(() => {
+        if (user && isAuthModalOpen) {
+            const selectedTool = localStorage.getItem("selectedTool");
+            if (selectedTool) {
+                localStorage.removeItem("selectedTool");
+                closeAuthModal();
+                
+                // Unified tool route mapping
+                if (selectedTool.includes("rank-checker") || selectedTool.includes("ranking-checker")) {
+                    navigate("/tools/google-maps-rank-checker");
+                } else {
+                    navigate(`/tools/${selectedTool}`);
+                }
+            }
+        }
+    }, [user, isAuthModalOpen, navigate, closeAuthModal])
 
     // ESC key listener
     useEffect(() => {

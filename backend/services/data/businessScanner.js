@@ -132,7 +132,7 @@ exports.scanBusinesses = async (keyword, location, limit = 500, userId = null, u
                     name: place.title || "",
                     rating: place.rating || 0,
                     reviews: place.reviews || 0,
-                    phone: place.phone || "",
+                    phone: place.phone || place.formatted_phone_number || place.international_phone_number || place.phoneNumber || "",
                     website,
                     address: place.address || "",
                     category: place.type || "unknown",

@@ -29,7 +29,10 @@ exports.getOpportunityHeatmap = async (req, res) => {
 
         // 2. Get latest snapshot
         const latestSnapshot = existingScan.history[existingScan.history.length - 1];
-        const businesses = latestSnapshot.businesses;
+        const businesses = latestSnapshot.businesses.map(b => ({
+            ...b,
+            title: b.name // Backward compatibility
+        }));
 
         // 3. Calculate Opportunity Scores
         // score logic:

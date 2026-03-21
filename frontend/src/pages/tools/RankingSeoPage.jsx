@@ -3,13 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import { Search, MapPin, Star, MessageSquare, Loader2, AlertCircle, ChevronRight, Globe } from 'lucide-react';
-import LockedSection from './components/LockedSection';
+import useAuthStore from '../../store/authStore';
+import LockedReportGate from './components/LockedReportGate';
 import RankingHistoryChart from '../../components/RankingHistoryChart';
 import PricingPreview from '../../components/landing/PricingPreview';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const RankingSeoPage = () => {
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === "admin";
     const { slug } = useParams();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
@@ -148,19 +151,27 @@ const RankingSeoPage = () => {
                 <div className="mt-8">
                     <RankingHistoryChart 
                         history={data.history || []} 
-                        isLocked={true} 
+                        isLocked={!isAdmin} 
                     />
                 </div>
 
-                <LockedSection 
-                    title="Unlock Full Local SEO Analysis"
-                    features={[
-                        "Full competitor list (top 20+)",
-                        "Interactive ranking movement maps",
-                        "AI-powered SEO insights",
-                        "Revenue & Review growth trends"
-                    ]}
-                />
+                        <LockedReportGate 
+                            toolName="Ranking Analysis"
+                            features={[
+                                "Full competitor list (top 20+)",
+                                "Interactive ranking movement maps",
+                                "AI-powered SEO insights",
+                                "Revenue & Review growth trends"
+                            ]}
+                        >
+                            {/* Premium Content */}
+                            <div className="mt-8 p-8 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-center text-center">
+                                <div>
+                                    <h4 className="font-bold text-blue-900 mb-2">Detailed Competitor Roadmap Unlocked</h4>
+                                    <p className="text-blue-600 text-sm">Full ranking history and AI insights are now visible.</p>
+                                </div>
+                            </div>
+                        </LockedReportGate>
 
                 <div className="mt-24 space-y-12">
                     <div className="text-center">

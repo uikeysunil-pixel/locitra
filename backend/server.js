@@ -37,6 +37,7 @@ const enrichRoutes = require("./routes/enrich.routes")
 const systemRoutes = require("./routes/system.routes")
 const publicRoutes = require("./routes/public.routes")
 const heatmapRoutes = require("./routes/heatmap.routes")
+const toolsRoutes = require("./routes/tools.routes")
 
 
 // Validate critical environment variables
@@ -95,6 +96,7 @@ app.use("/api/watch", watchMarketRoutes)
 app.use("/api/enrich", enrichRoutes)
 app.use("/api", publicRoutes)
 app.use("/api/opportunity-heatmap", heatmapRoutes)
+app.use("/api/tools", toolsRoutes)
 app.use("/api", systemRoutes)
 
 // Global Error Handler

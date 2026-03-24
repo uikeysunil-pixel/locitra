@@ -12,8 +12,24 @@
 exports.generateAudit = (business) => {
     const flags = []
 
+    // ── FALLBACK LOGIC ──────────────────────────────────
+    // Prioritize: outreach -> contact -> top-level legacy
+    const o = business.outreach || {}
+    const c = business.contact || {}
+    const cs = c.socials || {}
+    const os = o.socials || {}
+
+    const email = o.email || c.email || business.email
+    const phone = o.phone || c.phone || business.phone
+    const website = o.website || c.website || business.website
+    const contactPage = o.contactPage || c.contactPage || business.contactPage
+    
+    const facebook = os.facebook || cs.facebook || business.facebook
+    const instagram = os.instagram || cs.instagram || business.instagram
+    const linkedin = os.linkedin || cs.linkedin || business.linkedin
+
     /* ── Website ────────────────────────────────── */
-    if (!business.website) {
+    if (!website) {
         flags.push("❌ No website — completely invisible in Google search results.")
     }
 
@@ -36,15 +52,15 @@ exports.generateAudit = (business) => {
     }
 
     /* ── Contact signals ────────────────────────── */
-    if (!business.phone) {
+    if (!phone) {
         flags.push("📵 No phone number — customers cannot call to enquire.")
     }
-    if (!business.email && !business.contactPage) {
+    if (!email && !contactPage) {
         flags.push("📭 No contact email or contact page found.")
     }
 
     /* ── Social ─────────────────────────────────── */
-    const hasSocial = business.facebook || business.instagram || business.linkedin
+    const hasSocial = facebook || instagram || linkedin
     if (!hasSocial) {
         flags.push("📱 No social media presence — zero community engagement signals.")
     }

@@ -230,7 +230,19 @@ const WebsitePresenceTool = () => {
                             <div style={premiumGrid}>
                                 <div style={premiumItem}>
                                     <label style={premiumLabel}>Detected Email</label>
-                                    <p style={premiumVal}>{results.email || "Processing..."}</p>
+                                    <div style={{ ...premiumVal, display: "flex", alignItems: "center", gap: "8px" }}>
+                                        {results.email ? (
+                                            <a 
+                                                href={`mailto:${results.email}`} 
+                                                className="text-blue-600 hover:underline cursor-pointer"
+                                                style={{ color: "#6366f1", textDecoration: "underline", fontWeight: "700", position: "relative", zIndex: 10 }}
+                                            >
+                                                {results.email}
+                                            </a>
+                                        ) : (
+                                            <span style={{ color: "rgba(255,255,255,0.4)" }}>Processing...</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div style={premiumItem}>
                                     <label style={premiumLabel}>Contact Page</label>

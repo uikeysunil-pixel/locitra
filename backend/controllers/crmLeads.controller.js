@@ -36,6 +36,8 @@ exports.saveLead = async (req, res) => {
             address: b.address || "",
             opportunityScore: b.opportunityScore || 0,
             priorityScore: computePriorityScore(b),
+            outreach: b.outreach || {},
+            contact: b.contact || {},
             status: "New"
         })
 
@@ -43,6 +45,19 @@ exports.saveLead = async (req, res) => {
     } catch (err) {
         console.error("[CRM] saveLead error:", err.message)
         res.status(500).json({ success: false, message: "Failed to save lead" })
+    }
+}
+
+// @route  GET /api/crm/leads/:id
+// @access Private
+exports.getLeadById = async (req, res) => {
+    try {
+        const lead = await Lead.findOne({ _id: req.params.id, userId: req.user._id })
+        if (!lead) return res.status(404).json({ success: false, message: "Lead not found" })
+        res.json({ success: true, lead })
+    } catch (err) {
+        console.error("[CRM] getLeadById error:", err.message)
+        res.status(500).json({ success: false, message: "Failed to fetch lead" })
     }
 }
 

@@ -168,8 +168,6 @@ export const scanMarket = async (keyword, location) => {
     const normalizedKeyword = (keyword || "").toLowerCase().trim()
     const normalizedLocation = (location || "").toLowerCase().trim()
 
-    // Caching POST /market/scan might be tricky if it triggers background processes,
-    // but the user wants search results cached.
     return fetchJSON(
         "/market/scan",
         {},
@@ -179,6 +177,8 @@ export const scanMarket = async (keyword, location) => {
         }
     )
 }
+
+export const fetchBusinessById = (id) => fetchJSON(`/market/business/${id}`)
 
 /* ---------------- Market Gaps ---------------- */
 
@@ -224,6 +224,8 @@ export const saveLead = (business) =>
     fetchJSON("/crm/leads", {}, { method: "POST", body: business })
 
 export const fetchMyLeads = () => fetchJSON("/crm/leads")
+
+export const fetchLeadById = (id) => fetchJSON(`/crm/leads/${id}`)
 
 export const updateLead = (id, patch) =>
     fetchJSON(`/crm/leads/${id}`, {}, { method: "PATCH", body: patch })

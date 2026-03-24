@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { useMarketStore } from "../store/marketStore"
-import ContactModal from "./ContactModal"
 import { saveLead } from "../services/api"
 
 /* ── Shared badge helper ─────────────────────────────── */
@@ -97,8 +96,6 @@ function OutreachModal({ lead, onClose }) {
 
 /* ── Single reusable table ───────────────────────────── */
 function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEmail, onCopy }) {
-
-    const [selectedBusiness, setSelectedBusiness] = useState(null)
     const [crmState, setCrmState] = useState({}) // leadName → 'saving'|'saved'|'dup'
 
     if (!rows || rows.length === 0) {
@@ -137,7 +134,6 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                 <th style={{ ...thStyle, minWidth: "100px" }}>Opportunity</th>
                                 <th style={{ ...thStyle, minWidth: "90px" }}>Lead Value</th>
                                 <th style={{ ...thStyle, minWidth: "70px" }}>Maps</th>
-                                <th style={{ ...thStyle, minWidth: "80px" }}>Contact</th>
                                 <th style={{ ...thStyle, width: "120px", textAlign: "center" }}>Action</th>
                             </tr>
                         </thead>
@@ -208,17 +204,6 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                             </a>
                                         </td>
 
-                                        {/* Contact Info button */}
-                                        <td style={tdStyle}>
-                                            <button
-                                                onClick={() => setSelectedBusiness(lead)}
-                                                style={contactBtn}
-                                                title="View full contact details"
-                                            >
-                                                📇 Contact
-                                            </button>
-                                        </td>
-
                                         <td style={actionColumn}>
                                             {/* Full Outreach Generator */}
                                             <button
@@ -274,14 +259,6 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                 </div>
 
             </div>
-
-            {/* Contact Info Modal */}
-            {selectedBusiness && (
-                <ContactModal
-                    business={selectedBusiness}
-                    onClose={() => setSelectedBusiness(null)}
-                />
-            )}
 
         </>
     )

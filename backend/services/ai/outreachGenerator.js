@@ -13,13 +13,17 @@ const { OpenAI } = require("openai");
  */
 exports.generateOutreach = (business, audit) => {
 
+    const o = business.outreach || {}
+    const c = business.contact || {}
+    
+    const website = o.website || c.website || business.website
     const name = business.name || "your business"
     const city = business.city || business.location || "your area"
     const topFlag = audit.flags[0] || "opportunities to improve your online presence"
     const urgency = audit.urgency || "Medium"
 
     /* ── Pick strongest hook from audit flags ────── */
-    const hook = !business.website
+    const hook = !website
         ? `I noticed that ${name} doesn't have a website`
         : business.reviews < 30
             ? `I noticed that ${name} has very few Google reviews`

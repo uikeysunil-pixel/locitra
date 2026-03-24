@@ -170,7 +170,7 @@ const SuccessState = ({ shareUrl, onDownloadPDF, onCopyLink, onSendEmail }) => {
                         )}
                         <a 
                             href={`mailto:${email}?subject=${encodeURIComponent("Market Report")}&body=${encodeURIComponent("Check this AI market report: " + shareUrl)}`}
-                            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all"
+                            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all cursor-pointer relative z-10"
                         >
                             <ExternalLink className="w-4 h-4" />
                             Open in Mail Client

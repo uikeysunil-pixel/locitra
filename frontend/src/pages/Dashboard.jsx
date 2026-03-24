@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useMarketStore } from "../store/marketStore"
+import useLeadStore from "../store/leadStore"
 import { fetchAnalytics } from "../services/api"
 import useAuthStore from "../store/authStore"
 
@@ -189,13 +190,15 @@ const recentOppIcon = {
 export default function Dashboard() {
 
     const { businesses, setBusinesses } = useMarketStore()
+    const setSelectedLead = useLeadStore((state) => state.setSelectedLead)
 
     /* ── Shared Email / Copy / Outreach Handlers ──────────────────── */
     const [outreachLead, setOutreachLead] = useState(null)
     const [fullOutreachLead, setFullOutreachLead] = useState(null)
 
     const handleOutreach = (lead) => {
-        setFullOutreachLead(lead)
+        setSelectedLead(lead)       // ← writes to global store
+        setFullOutreachLead(lead)   // ← keeps modal open/close logic
     }
 
     const handleEmail = (lead) => {

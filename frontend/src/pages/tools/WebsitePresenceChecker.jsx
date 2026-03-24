@@ -208,21 +208,36 @@ const WebsitePresenceChecker = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-1">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Business Email</p>
-                                        <p className="font-medium text-slate-900">{results.email || "Not found"}</p>
+                                        <p className="font-medium text-slate-900">
+                                            {results.email ? (
+                                                <a 
+                                                    href={`mailto:${results.email}`} 
+                                                    className="text-blue-600 hover:underline cursor-pointer relative z-10 inline-block"
+                                                >
+                                                    {results.email}
+                                                </a>
+                                            ) : "Not found"}
+                                        </p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact Page</p>
                                         <p className="font-medium text-slate-900 truncate">
                                             {results.contactPage ? (
                                                 <a href={results.contactPage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                    View Page
+                                                    View Page ↗
                                                 </a>
                                             ) : "Not found"}
                                         </p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</p>
-                                        <p className="font-medium text-slate-900">{results.phone || "Not available"}</p>
+                                        <p className="font-medium text-slate-900">
+                                            {results.phone ? (
+                                                <a href={`tel:${results.phone}`} className="text-blue-600 hover:underline">
+                                                    {results.phone}
+                                                </a>
+                                            ) : "Not available"}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

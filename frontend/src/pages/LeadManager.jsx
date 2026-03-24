@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { fetchMyLeads, updateLead, saveLead, deleteLead, bulkDeleteLeads } from "../services/api"
+import useLeadStore from "../store/leadStore"
 import Outreach from "./Outreach"
 
 const STATUS_OPTIONS = ["New", "Contacted", "Interested", "Meeting", "Closed"]
@@ -22,6 +23,7 @@ export default function LeadManager() {
     const [search, setSearch] = useState("")
     const [selectedIds, setSelectedIds] = useState([])
 
+    const setSelectedLead = useLeadStore((state) => state.setSelectedLead)
     const [outreachLead, setOutreachLead] = useState(null)
 
     const loadLeads = useCallback(async () => {
@@ -186,12 +188,30 @@ export default function LeadManager() {
 
                                     <td style={td}>
                                         {lead.website
-                                            ? <a href={lead.website} target="_blank" rel="noopener noreferrer" style={link}>Visit ↗</a>
+                                            ? <a href={lead.website} target="_blank" rel="noopener noreferrer" style={tableLink}>🌐 Visit ↗</a>
                                             : <span style={noSite}>No Website</span>}
                                     </td>
 
-                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>{lead.email || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>—</span>}</td>
-                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>{lead.phone || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>}</td>
+                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>
+                                        {lead.email ? (
+                                            <a 
+                                                href={`mailto:${lead.email}`} 
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{...tableLink, position: "relative", zIndex: 10}}
+                                            >
+                                                📧 {lead.email}
+                                            </a>
+                                        ) : (
+                                            <span style={{ color: "#cbd5e1", fontWeight: "600" }}>—</span>
+                                        )}
+                                    </td>
+                                    <td style={{ ...td, fontSize: "12px", whiteSpace: "nowrap" }}>
+                                        {lead.phone ? (
+                                            <a href={`tel:${lead.phone.replace(/[^0-9+]/g, "")}`} style={tableLink}>📞 {lead.phone}</a>
+                                        ) : (
+                                            <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>
+                                        )}
+                                    </td>
 
                                     <td style={td}>
                                         <span style={scoreBadge(lead.opportunityScore)}>{lead.opportunityScore}</span>
@@ -240,7 +260,7 @@ export default function LeadManager() {
                                     <td style={{...td, textAlign: "center"}}>
                                         <div style={{ display: "flex", gap: "6px", justifyContent: "center", flexWrap: "wrap" }}>
                                             <button
-                                                onClick={() => setOutreachLead(lead)}
+                                                onClick={() => { setSelectedLead(lead); setOutreachLead(lead) }}
                                                 style={outreachBtnStyle}
                                             >
                                                 🚀 Outreach
@@ -291,7 +311,7 @@ const table = { width: "100%", borderCollapse: "collapse", fontSize: "13px" }
 const th = { padding: "12px 14px", textAlign: "left", background: "#f8fafc", fontWeight: "700", color: "#475569", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }
 const td = { padding: "12px 14px", color: "#0f172a", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" }
 const tr = { transition: "background .1s" }
-const link = { color: "#6366f1", fontWeight: "600", fontSize: "12px" }
+const tableLink = { color: "#6366f1", textDecoration: "none", fontWeight: "700", cursor: "pointer", position: "relative", zIndex: 10, display: "inline-block" }
 const noSite = { color: "#ef4444", fontSize: "12px", fontWeight: "600" }
 const catTag = { fontSize: "10px", color: "#94a3b8", marginTop: "2px" }
 const systemTag = { fontSize: "10px", background: "#f1f5f9", color: "#64748b", padding: "1px 6px", borderRadius: "10px", fontWeight: "700" }

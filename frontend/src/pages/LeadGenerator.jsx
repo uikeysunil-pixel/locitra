@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { useMarketStore } from "../store/marketStore"
 import ExportCSV from "../components/ExportCSV"
+import { fetchLeadById, fetchBusinessById, generateAIOutreachEmail } from "../services/api"
 
 export default function LeadGenerator() {
 
@@ -51,21 +52,40 @@ export default function LeadGenerator() {
     const getReviews = (b) => Number(b.reviews) || Number(b.totalReviews) || 0
 
     const generateSingle = async (lead) => {
+        setLoadingLead(lead.name)
         try {
-            setLoadingLead(lead.name)
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/outreach/generate-outreach`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    businessName: lead.name,
-                    category: lead.category || "business",
-                    rating: lead.rating,
-                    reviews: getReviews(lead),
-                    city: lead.location || lead.city || ""
-                })
+            // Fresh Fetch
+            const id = lead._id || lead.placeId
+            let freshLead = lead
+            if (id) {
+                const resFresh = lead.userId ? await fetchLeadById(id) : await fetchBusinessById(id)
+                if (resFresh.success) {
+                    freshLead = resFresh.data.lead || resFresh.data.business
+                }
+            }
+
+            const business = freshLead;
+            const o = business.outreach || {}
+            const c = business.contact || {}
+
+            const email = o.email || c.email || business.email;
+            const phone = o.phone || c.phone || business.phone;
+            const website = o.website || c.website || business.website;
+            const contactPage = o.contactPage || c.contactPage || business.contactPage;
+            const socials = o.socials || c.socials || {};
+
+            console.log("AI BUSINESS DATA:", business);
+            console.log("OUTREACH:", o);
+            console.log("NORMALIZED:", { email, phone, website, contactPage, socials });
+
+            const res = await generateAIOutreachEmail({
+                ...business,
+                website: website || ""
             })
-            const data = await res.json()
-            setInlineEmails(prev => ({ ...prev, [lead.name]: data.outreach || "No email generated" }))
+
+            if (res.success) {
+                setInlineEmails(prev => ({ ...prev, [lead.name]: res.data.outreach || "No email generated" }))
+            }
         } catch (e) {
             console.error("Email gen failed:", e)
         } finally {
@@ -81,19 +101,38 @@ export default function LeadGenerator() {
             const lead = businesses.find(b => b.name === name)
             if (!lead) continue
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/outreach/generate-outreach`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        businessName: lead.name,
-                        category: lead.category || "business",
-                        rating: lead.rating,
-                        reviews: getReviews(lead),
-                        city: lead.location || lead.city || ""
-                    })
+                // Fresh Fetch
+                const id = lead._id || lead.placeId
+                let freshLead = lead
+                if (id) {
+                    const resFresh = lead.userId ? await fetchLeadById(id) : await fetchBusinessById(id)
+                    if (resFresh.success) {
+                        freshLead = resFresh.data.lead || resFresh.data.business
+                    }
+                }
+
+                const business = freshLead;
+                const o = business.outreach || {}
+                const c = business.contact || {}
+
+                const email = o.email || c.email || business.email;
+                const phone = o.phone || c.phone || business.phone;
+                const website = o.website || c.website || business.website;
+                const contactPage = o.contactPage || c.contactPage || business.contactPage;
+                const socials = o.socials || c.socials || {};
+
+                console.log("AI BULK BUSINESS DATA:", business);
+                console.log("OUTREACH:", o);
+                console.log("NORMALIZED:", { email, phone, website, contactPage, socials });
+
+                const res = await generateAIOutreachEmail({
+                    ...business,
+                    website: website || ""
                 })
-                const data = await res.json()
-                results.push({ business: lead.name, email: data.outreach || "Generation failed" })
+
+                if (res.success) {
+                    results.push({ business: lead.name, email: res.data.outreach || "Generation failed" })
+                }
             } catch {
                 results.push({ business: lead.name, email: "Error generating email" })
             }
@@ -253,13 +292,17 @@ export default function LeadGenerator() {
 
                                         <td>
                                             {lead.website
-                                                ? <a href={lead.website} target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1", fontWeight: "600", fontSize: "13px" }}>Visit ↗</a>
-                                                : <span style={{ color: "#ef4444", fontWeight: "600", fontSize: "12px" }}>No Website</span>
+                                                ? <a href={lead.website} target="_blank" rel="noopener noreferrer" style={tableLink}>🌐 Visit ↗</a>
+                                                : <span style={noSite}>No Website</span>
                                             }
                                         </td>
 
                                         <td style={{ fontSize: "13px", color: "#475569", whiteSpace: "nowrap" }}>
-                                            {lead.phone || <span style={{ color: "#cbd5e1", fontWeight: "600" }}>No Phone</span>}
+                                            {lead.phone ? (
+                                                <a href={`tel:${lead.phone.replace(/[^0-9+]/g, "")}`} style={tableLink}>📞 {lead.phone}</a>
+                                            ) : (
+                                                <span style={{ color: "#cbd5e1", fontStyle: "italic" }}>No Phone</span>
+                                            )}
                                         </td>
 
                                         <td style={{ fontSize: "13px", color: "#475569", maxWidth: "180px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -338,5 +381,7 @@ const pageSub = { fontSize: "14px", color: "#64748b", marginTop: "4px" }
 
 const controls = { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", padding: "16px 20px", marginTop: "20px" }
 const filterBtns = { display: "flex", gap: "8px", flexWrap: "wrap" }
+const tableLink = { color: "#6366f1", textDecoration: "none", fontWeight: "700", cursor: "pointer", fontSize: "13px" }
+const noSite = { color: "#ef4444", fontWeight: "600", fontSize: "12px" }
 
 const emptyCard = { padding: "60px 40px", textAlign: "center", marginTop: "20px" }

@@ -5,6 +5,24 @@ const User = require("../models/user.model")
 const { scanBusinesses } = require("../services/data/businessScanner")
 const { normalizeBusinesses } = require("../services/data/businessNormalizer")
 
+const applyContactFallbackArray = (docs) => {
+    return docs.map(ret => {
+        const o = ret.outreach || {};
+        ret.contact = ret.contact || {};
+        ret.contact.email = o.email || ret.contact.email;
+        ret.contact.phone = o.phone || ret.contact.phone;
+        ret.contact.website = o.website || ret.contact.website;
+        ret.contact.contactPage = o.contactPage || ret.contact.contactPage;
+        ret.contact.socials = ret.contact.socials || {};
+        const os = o.socials || {};
+        ret.contact.socials.facebook = os.facebook || ret.contact.socials.facebook;
+        ret.contact.socials.instagram = os.instagram || ret.contact.socials.instagram;
+        ret.contact.socials.linkedin = os.linkedin || ret.contact.socials.linkedin;
+        ret.contact.socials.twitter = os.twitter || ret.contact.socials.twitter;
+        return ret;
+    });
+};
+
 // Simple in-memory cache for market scans
 const scanCache = new Map()
 const scanResultsCache = {} // Exported for reports
@@ -70,12 +88,13 @@ exports.scanMarket = async (req, res) => {
 
         // 2. MONGODB CACHE CHECK (Persistent)
         console.log("[scanMarket] Checking MongoDB cache for:", { keyword: normalizedKeyword, location: normalizedLocation })
-        const dbCached = await Business.find({
+        let dbCached = await Business.find({
             keyword: normalizedKeyword,
             location: normalizedLocation
         }).lean()
 
         if (dbCached && dbCached.length > 0) {
+            dbCached = applyContactFallbackArray(dbCached);
             console.log(`[scanMarket] Cache hit! Found ${dbCached.length} businesses in MongoDB.`)
             
             // ... (metrics calculation) ...
@@ -158,12 +177,13 @@ exports.scanMarket = async (req, res) => {
             console.log("[scanMarket] Raw businesses from SerpAPI:", rawBusinesses.length)
         } catch (scanErr) {
             // fallback logic...
-            const finalCheck = await Business.find({
+            let finalCheck = await Business.find({
                 keyword: normalizedKeyword,
                 location: normalizedLocation
             }).lean()
 
             if (finalCheck.length > 0) {
+                finalCheck = applyContactFallbackArray(finalCheck);
                 return res.json({ 
                     keyword: normalizedKeyword, 
                     location: normalizedLocation, 
@@ -352,4 +372,28 @@ exports.getMarketHistory = async (req, res) => {
 
     }
 
+}
+
+// @route  GET /api/market/business/:id
+// @access Private
+exports.getBusinessById = async (req, res) => {
+    try {
+        const { id } = req.params
+        // Try finding by MongoDB ID first, then by placeId
+        let business = await Business.findOne({
+            $or: [
+                { _id: id.length === 24 ? id : null },
+                { placeId: id }
+            ].filter(q => q._id !== null || q.placeId !== undefined)
+        }).lean()
+
+        if (!business) return res.status(404).json({ success: false, message: "Business not found" })
+        
+        // Apply fallbacks
+        const [enriched] = applyContactFallbackArray([business])
+        res.json({ success: true, business: enriched })
+    } catch (err) {
+        console.error("[market] getBusinessById error:", err.message)
+        res.status(500).json({ success: false, message: "Failed to fetch business" })
+    }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
-import { fetchMyLeads, fetchLeadById, fetchBusinessById } from "../services/api"
+import { fetchMyLeads, fetchLeadById, fetchBusinessById, sendEmailToLead } from "../services/api"
 import useLeadStore from "../store/leadStore"
 import { getLeadValue, getMapUrl } from "../utils/leadHelpers"
 import { 
@@ -35,6 +35,7 @@ export default function Outreach({ initialLead }) {
     const [aiSearching, setAiSearching] = useState(false)  // loading state for AI finder
     const [autoDispatching, setAutoDispatching] = useState(false)
     const [dispatchStatus, setDispatchStatus] = useState(null)
+    const [sendingDirect, setSendingDirect] = useState(false)
 
     const location = useLocation()
     const [fetching, setFetching] = useState(false)
@@ -273,6 +274,39 @@ export default function Outreach({ initialLead }) {
         }
     }
 
+    const handleSendDirect = async (subject, body) => {
+        if (!selected) return;
+        
+        const o = selected.outreach || {};
+        const c = selected.contact || {};
+        const email = o.email || c.email || selected.email;
+
+        if (!email) {
+            alert("No email address available for this lead.");
+            return;
+        }
+
+        setSendingDirect(true);
+        try {
+            const res = await sendEmailToLead({
+                to: email,
+                subject: subject || "Quick question about your business",
+                message: body
+            });
+
+            if (res.success) {
+                alert("Email sent successfully!");
+            } else {
+                alert("Failed to send email: " + (res.error || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Direct send error:", err);
+            alert("Error sending email");
+        } finally {
+            setSendingDirect(false);
+        }
+    }
+
     const handleCopy = async (text, type = "default") => {
         try {
             await navigator.clipboard.writeText(text || "")
@@ -390,93 +424,94 @@ export default function Outreach({ initialLead }) {
 
                 return (
                     <div style={previewCard} onClick={e => e.stopPropagation()}>
-                        {noContact ? (
-                            /* ── No-contact fallback ── */
-                            <div className="flex flex-col gap-2 py-1">
-                                <p className="text-sm font-semibold text-slate-600">No direct contact found</p>
-                                <p className="text-xs text-slate-400">Try one of these to reach them:</p>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {mapUrl && (
-                                        <a href={mapUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-100">
-                                            🗺️ View Map
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            /* ── Normal contact fields ── */
                             <>
-                        <div style={previewItem}>
-                            <span style={previewLabel}>📧 EMAIL</span>
-                            <span style={previewValue}>
-                                {email ? (
-                                    <a 
-                                        href={`mailto:${email.trim()}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        style={{...previewLink, cursor: "pointer", position: "relative", zIndex: 11}}
-                                    >
-                                        {email.trim()}
-                                    </a>
-                                ) : (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        <span style={{ color: "#64748b" }}>Not found</span>
-                                        {contactPage && (
-                                            <a 
-                                                href={contactPage}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={previewActionLink}
-                                            >
-                                                📩 Website Contact
-                                            </a>
-                                        )}
+                                <div style={previewItem}>
+                                    <span style={previewLabel}>📧 EMAIL</span>
+                                    <span style={previewValue}>
+                                        {(() => {
+                                            const isMissing = (val) => !val || String(val).trim() === "" || String(val).trim().toUpperCase() === "N/A" || String(val).trim().toLowerCase() === "not available";
+                                            return !isMissing(email) ? (
+                                                <a 
+                                                    href={`mailto:${email.trim()}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{...previewLink, cursor: "pointer", position: "relative", zIndex: 11}}
+                                                >
+                                                    {email.trim()}
+                                                </a>
+                                            ) : (
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                    <span style={{ color: "#64748b" }}>Not found</span>
+                                                    {!isMissing(website) && (
+                                                        <a 
+                                                            href={contactPage || website}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={previewActionLink}
+                                                        >
+                                                            📩 Website Contact
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </span>
+                                </div>
+                                <div style={previewItem}>
+                                    <span style={previewLabel}>📞 PHONE</span>
+                                    <span style={previewValue}>
+                                        {(() => {
+                                            const isMissing = (val) => !val || String(val).trim() === "" || String(val).trim().toUpperCase() === "N/A" || String(val).trim().toLowerCase() === "not available";
+                                            return !isMissing(phone) ? (
+                                                <a href={`tel:${phone?.replace(/[^0-9+]/g, "")}`} style={previewLink}>{phone}</a>
+                                            ) : (
+                                                <span style={{ color: "#64748b" }}>Not found</span>
+                                            );
+                                        })()}
+                                    </span>
+                                </div>
+                                <div style={previewItem}>
+                                    <span style={previewLabel}>🌐 WEBSITE</span>
+                                    <span style={previewValue}>
+                                        {(() => {
+                                            const isMissing = (val) => !val || String(val).trim() === "" || String(val).trim().toUpperCase() === "N/A" || String(val).trim().toLowerCase() === "not available";
+                                            return !isMissing(website) ? (
+                                                <a href={website} target="_blank" rel="noopener noreferrer" style={previewLink}>
+                                                    Visit Website
+                                                </a>
+                                            ) : (
+                                                <span style={{ color: "#64748b" }}>Not found</span>
+                                            );
+                                        })()}
+                                    </span>
+                                </div>
+                                <div style={previewItem}>
+                                    <span style={previewLabel}>🪟 SOCIALS</span>
+                                    <div style={socialRowSmall}>
+                                        {(() => {
+                                            const isMissing = (val) => !val || String(val).trim() === "" || String(val).trim().toUpperCase() === "N/A" || String(val).trim().toLowerCase() === "not available";
+                                            const links = [];
+                                            if (!isMissing(facebook)) links.push(<a key="fb" href={facebook} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>Facebook</a>);
+                                            if (!isMissing(instagram)) links.push(<a key="ig" href={instagram} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>Instagram</a>);
+                                            if (!isMissing(phone)) {
+                                                const cleanPhone = phone?.replace(/[^0-9+]/g, "");
+                                                if (cleanPhone) {
+                                                    links.push(<a key="wa" href={`https://wa.me/${cleanPhone.replace("+", "")}`} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>WhatsApp</a>);
+                                                    links.push(<a key="sms" href={`sms:${cleanPhone}?body=${encodeURIComponent("Hi, I came across your business and wanted to connect.")}`} style={socialLinkSmall}>SMS</a>);
+                                                }
+                                            }
+
+                                            if (links.length === 0) return <span style={{ color: "#64748b", fontSize: "13px" }}>Not found</span>;
+
+                                            return links.reduce((acc, link, i) => {
+                                                if (i > 0) acc.push(<span key={`sep-${i}`} style={socialDividerSmall}>|</span>);
+                                                acc.push(link);
+                                                return acc;
+                                            }, []);
+                                        })()}
                                     </div>
-                                )}
-                            </span>
-                        </div>
-                        {phone && (
-                            <div style={previewItem}>
-                                <span style={previewLabel}>📞 PHONE</span>
-                                <span style={previewValue}>
-                                    <a href={`tel:${cleanPhone}`} style={previewLink}>{phone}</a>
-                                </span>
-                            </div>
-                        )}
-                        <div style={previewItem}>
-                            <span style={previewLabel}>🌐 WEBSITE</span>
-                            <span style={previewValue}>
-                                {website ? (
-                                    <a href={website} target="_blank" rel="noopener noreferrer" style={previewLink}>
-                                        Visit Website
-                                    </a>
-                                ) : <span style={{ color: "#64748b" }}>Not found</span>}
-                            </span>
-                        </div>
-                        <div style={previewItem}>
-                            <span style={previewLabel}>🪟 SOCIALS</span>
-                            <div style={socialRowSmall}>
-                                {(() => {
-                                    const links = [];
-                                    if (facebook) links.push(<a key="fb" href={facebook} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>Facebook</a>);
-                                    if (instagram) links.push(<a key="ig" href={instagram} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>Instagram</a>);
-                                    if (cleanPhone) links.push(<a key="wa" href={`https://wa.me/${cleanPhone.replace("+", "")}`} target="_blank" rel="noopener noreferrer" style={socialLinkSmall}>WhatsApp</a>);
-                                    if (cleanPhone) links.push(<a key="sms" href={`sms:${cleanPhone}?body=${encodeURIComponent("Hi, I came across your business and wanted to connect.")}`} style={socialLinkSmall}>SMS</a>);
-
-                                    if (links.length === 0) return <span style={{ color: "#64748b", fontSize: "13px" }}>Not found</span>;
-
-                                    return links.reduce((acc, link, i) => {
-                                        if (i > 0) acc.push(<span key={`sep-${i}`} style={socialDividerSmall}>|</span>);
-                                        acc.push(link);
-                                        return acc;
-                                    }, []);
-                                })()}
-                            </div>
-                        </div>
-                        {fetching && <div style={fetchingOverlay}>Refreshing data…</div>}
-
+                                </div>
+                                {fetching && <div style={fetchingOverlay}>Refreshing data…</div>}
                             </>
-                        )}
 
                         {/* ── AI Contact Finder ── */}
                         {(!email && !phone && !website) && (
@@ -727,6 +762,13 @@ export default function Outreach({ initialLead }) {
                                         onClick={() => handleCopy(bodyStr, "email")}
                                     >
                                         {copiedEmail ? "✓ Email copied" : "📋 Copy Email"}
+                                    </button>
+                                    <button
+                                        style={{...copyBtnGroup, background: "#f8fafc", color: "#0f172a", border: "1px solid #cbd5e1"}}
+                                        onClick={() => handleSendDirect(subjectStr, bodyStr)}
+                                        disabled={sendingDirect}
+                                    >
+                                        {sendingDirect ? "Sending…" : "📧 Send Now"}
                                     </button>
                                 </div>
                             );

@@ -260,3 +260,6 @@ export const enrichSingleLead = (leadId) =>
 
 export const generateAIOutreachEmail = (data) =>
     fetchJSON('/outreach/generate', {}, { method: "POST", body: data })
+
+export const sendEmailToLead = (data) =>
+    fetchJSON('/email/send', {}, { method: "POST", body: data })

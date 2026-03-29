@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -9,6 +8,13 @@ export default defineConfig({
   ],
   server: {
     https: false,
-    port: 5173
+    port: 5173,
+    strictPort: true,   // fail loudly instead of jumping to 5174
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      }
+    }
   }
 })

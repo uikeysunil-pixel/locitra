@@ -105,24 +105,15 @@ function OutreachModal({ lead, onClose }) {
                 <textarea
                     readOnly
                     value={email}
-                    placeholder="Click Generate to write a personalized cold email..."
+                    placeholder="Use quick email to contact this business instantly..."
                     style={modalTextarea}
                 />
 
-                <div style={modalActions}>
-                    {!email ? (
-                        <button style={btnPrimary} onClick={generate} disabled={loading}>
-                            {loading ? "Generating..." : "⚡ Generate Cold Email"}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                    {lead.email && (
+                        <button style={btnPrimary} onClick={() => window.open(`mailto:${lead.email}`)}>
+                            📧 Open Email
                         </button>
-                    ) : (
-                        <>
-                            <button style={btnSecondary} onClick={generate} disabled={loading}>
-                                {loading ? "Regenerating..." : "🔄 Regenerate"}
-                            </button>
-                            <button style={btnPrimary} onClick={copyToClipboard}>
-                                {copied ? "✅ Copied!" : "📋 Copy Email"}
-                            </button>
-                        </>
                     )}
                 </div>
             </div>
@@ -202,7 +193,9 @@ export default function Dashboard() {
     }
 
     const handleEmail = (lead) => {
-        setOutreachLead(lead)
+        if (lead.email) {
+            window.open(`mailto:${lead.email}`)
+        }
     }
 
     const copyLead = (lead) => {

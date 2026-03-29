@@ -38,6 +38,7 @@ const systemRoutes = require("./routes/system.routes")
 const publicRoutes = require("./routes/public.routes")
 const heatmapRoutes = require("./routes/heatmap.routes")
 const toolsRoutes = require("./routes/tools.routes")
+const emailRoutes = require("./routes/email.routes")
 
 
 // Validate critical environment variables
@@ -66,10 +67,7 @@ app.get("/", (req, res) => {
 
 // Middleware
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://locitra.com"
-    ],
+    origin: true,
     credentials: true
 }))
 app.use(express.json())
@@ -97,7 +95,9 @@ app.use("/api/enrich", enrichRoutes)
 app.use("/api", publicRoutes)
 app.use("/api/opportunity-heatmap", heatmapRoutes)
 app.use("/api/tools", toolsRoutes)
+app.use("/api/email", emailRoutes)
 app.use("/api", systemRoutes)
+app.use("/api/admin", adminRoutes)
 
 // Global Error Handler
 app.use((err, req, res, next) => {

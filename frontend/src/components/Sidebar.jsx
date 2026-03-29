@@ -99,6 +99,16 @@ export default function Sidebar() {
                 <ul style={menuStyle}>
                     {NAV_SEO_TOOLS.map(n => <NavItem key={n.to} {...n} />)}
                 </ul>
+
+                {user?.role === "admin" && (
+                    <>
+                        <p style={navLabel}>ADMIN</p>
+                        <ul style={menuStyle}>
+                            <NavItem to="/admin" icon="🛡️" label="Admin Panel" />
+                            <NavItem to="/admin/blog-writer" icon="✍️" label="Blog Writer" />
+                        </ul>
+                    </>
+                )}
             </nav>
 
             {/* Footer */}

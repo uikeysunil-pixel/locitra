@@ -1,35 +1,30 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useMarketStore } from "../store/marketStore"
 import ExportCSV from "../components/ExportCSV"
-import { fetchLeadById, fetchBusinessById, generateAIOutreachEmail } from "../services/api"
+import useLeadStore from "../store/leadStore"
+import Outreach from "./Outreach"
+import LeadFilters from "../components/LeadFilters"
 
 export default function LeadGenerator() {
 
     const { businesses } = useMarketStore()
 
     const [selected, setSelected] = useState(new Set())
-    const [inlineEmails, setInlineEmails] = useState({})
-    const [loadingLead, setLoadingLead] = useState(null)
-    const [generating, setGenerating] = useState(false)
-    const [bulkEmails, setBulkEmails] = useState([])
-    const [searchQ, setSearchQ] = useState("")
-    const [filterMode, setFilterMode] = useState("all") // all | high | nosite
+    const [filtered, setFiltered] = useState([])
 
-    /* ── Filtering ───────────────────────────────────── */
-    const filtered = useMemo(() => {
-        let src = [...businesses]
-        if (filterMode === "high") src = src.filter(b => (b.opportunityScore ?? 0) >= 70)
-        if (filterMode === "nosite") src = src.filter(b => !b.website)
-        if (searchQ.trim()) {
-            const q = searchQ.toLowerCase()
-            src = src.filter(b =>
-                (b.name || "").toLowerCase().includes(q) ||
-                (b.category || "").toLowerCase().includes(q) ||
-                (b.address || "").toLowerCase().includes(q)
-            )
-        }
-        return src.sort((a, b) => (b.opportunityScore ?? 0) - (a.opportunityScore ?? 0))
-    }, [businesses, filterMode, searchQ])
+    const setSelectedLead = useLeadStore((state) => state.setSelectedLead)
+    const [outreachLead, setOutreachLead] = useState(null)
+
+    // Close outreach modal on ESC
+    useEffect(() => {
+        const handleKey = (e) => { if (e.key === 'Escape') setOutreachLead(null) }
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [])
+
+    const handleFilter = (filteredList) => {
+        setFiltered(filteredList)
+    }
 
     /* ── Selection ───────────────────────────────────── */
     const toggleSelect = (name) => {
@@ -50,96 +45,6 @@ export default function LeadGenerator() {
 
     /* ── Email helpers ───────────────────────────────── */
     const getReviews = (b) => Number(b.reviews) || Number(b.totalReviews) || 0
-
-    const generateSingle = async (lead) => {
-        setLoadingLead(lead.name)
-        try {
-            // Fresh Fetch
-            const id = lead._id || lead.placeId
-            let freshLead = lead
-            if (id) {
-                const resFresh = lead.userId ? await fetchLeadById(id) : await fetchBusinessById(id)
-                if (resFresh.success) {
-                    freshLead = resFresh.data.lead || resFresh.data.business
-                }
-            }
-
-            const business = freshLead;
-            const o = business.outreach || {}
-            const c = business.contact || {}
-
-            const email = o.email || c.email || business.email;
-            const phone = o.phone || c.phone || business.phone;
-            const website = o.website || c.website || business.website;
-            const contactPage = o.contactPage || c.contactPage || business.contactPage;
-            const socials = o.socials || c.socials || {};
-
-            console.log("AI BUSINESS DATA:", business);
-            console.log("OUTREACH:", o);
-            console.log("NORMALIZED:", { email, phone, website, contactPage, socials });
-
-            const res = await generateAIOutreachEmail({
-                ...business,
-                website: website || ""
-            })
-
-            if (res.success) {
-                setInlineEmails(prev => ({ ...prev, [lead.name]: res.data.outreach || "No email generated" }))
-            }
-        } catch (e) {
-            console.error("Email gen failed:", e)
-        } finally {
-            setLoadingLead(null)
-        }
-    }
-
-    const generateBulk = async () => {
-        if (selected.size === 0) { alert("Select at least one lead"); return }
-        setGenerating(true)
-        const results = []
-        for (const name of selected) {
-            const lead = businesses.find(b => b.name === name)
-            if (!lead) continue
-            try {
-                // Fresh Fetch
-                const id = lead._id || lead.placeId
-                let freshLead = lead
-                if (id) {
-                    const resFresh = lead.userId ? await fetchLeadById(id) : await fetchBusinessById(id)
-                    if (resFresh.success) {
-                        freshLead = resFresh.data.lead || resFresh.data.business
-                    }
-                }
-
-                const business = freshLead;
-                const o = business.outreach || {}
-                const c = business.contact || {}
-
-                const email = o.email || c.email || business.email;
-                const phone = o.phone || c.phone || business.phone;
-                const website = o.website || c.website || business.website;
-                const contactPage = o.contactPage || c.contactPage || business.contactPage;
-                const socials = o.socials || c.socials || {};
-
-                console.log("AI BULK BUSINESS DATA:", business);
-                console.log("OUTREACH:", o);
-                console.log("NORMALIZED:", { email, phone, website, contactPage, socials });
-
-                const res = await generateAIOutreachEmail({
-                    ...business,
-                    website: website || ""
-                })
-
-                if (res.success) {
-                    results.push({ business: lead.name, email: res.data.outreach || "Generation failed" })
-                }
-            } catch {
-                results.push({ business: lead.name, email: "Error generating email" })
-            }
-        }
-        setBulkEmails(results)
-        setGenerating(false)
-    }
 
     const getMapsLink = (b) =>
         b.mapsLink ||
@@ -182,45 +87,9 @@ export default function LeadGenerator() {
                 <ExportCSV businesses={businesses} />
             </div>
 
-            {/* Controls */}
-            <div className="card" style={controls}>
-
-                <input
-                    placeholder="Search business, category, address…"
-                    value={searchQ}
-                    onChange={e => setSearchQ(e.target.value)}
-                    style={{ flex: 1, minWidth: "200px" }}
-                />
-
-                <div style={filterBtns}>
-                    {[
-                        { key: "all", label: "All Leads" },
-                        { key: "high", label: "🎯 High Opportunity" },
-                        { key: "nosite", label: "🌐 No Website" },
-                    ].map(({ key, label }) => (
-                        <button
-                            key={key}
-                            onClick={() => setFilterMode(key)}
-                            className={filterMode === key ? "btn-primary" : "btn-ghost"}
-                            style={{ padding: "8px 14px", fontSize: "13px" }}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-
-                <button
-                    onClick={generateBulk}
-                    disabled={generating || selected.size === 0}
-                    className="btn-primary"
-                    style={{ whiteSpace: "nowrap" }}
-                >
-                    {generating
-                        ? "Generating…"
-                        : `✉ Generate Emails (${selected.size})`
-                    }
-                </button>
-
+            {/* Filters */}
+            <div style={{ marginTop: "20px" }}>
+                <LeadFilters businesses={businesses} onFilter={handleFilter} />
             </div>
 
             {/* Table */}
@@ -321,20 +190,11 @@ export default function LeadGenerator() {
 
                                         <td>
                                             <button
-                                                className="btn-primary btn-sm"
-                                                disabled={loadingLead === lead.name}
-                                                onClick={() => generateSingle(lead)}
+                                                onClick={() => { setSelectedLead(lead); setOutreachLead(lead) }}
+                                                style={outreachBtnStyle}
                                             >
-                                                {loadingLead === lead.name ? "…" : "✉ Email"}
+                                                🚀 Outreach
                                             </button>
-                                            {inlineEmails[lead.name] && (
-                                                <textarea
-                                                    rows={4}
-                                                    readOnly
-                                                    value={inlineEmails[lead.name]}
-                                                    style={{ display: "block", width: "220px", marginTop: "6px", fontSize: "12px", borderRadius: "6px", border: "1px solid #e2e8f0", padding: "6px" }}
-                                                />
-                                            )}
                                         </td>
 
                                     </tr>
@@ -346,23 +206,18 @@ export default function LeadGenerator() {
 
             </div>
 
-            {/* Bulk email results */}
-            {bulkEmails.length > 0 && (
-                <div className="card" style={{ marginTop: "28px", padding: "24px" }}>
-                    <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>
-                        ✉ Bulk Generated Outreach Emails
-                    </h3>
-                    {bulkEmails.map((item, i) => (
-                        <div key={i} style={{ marginBottom: "20px" }}>
-                            <p style={{ fontWeight: "600", marginBottom: "6px" }}>{item.business}</p>
-                            <textarea
-                                rows={6}
-                                readOnly
-                                value={item.email}
-                                style={{ width: "100%", fontSize: "13px", borderRadius: "8px", border: "1px solid #e2e8f0", padding: "10px" }}
-                            />
+            {/* ── Outreach Modal ── */}
+            {outreachLead && (
+                <div style={outreachModalBackdrop} onClick={() => setOutreachLead(null)}>
+                    <div style={outreachModalCard} onClick={e => e.stopPropagation()}>
+                        <div style={outreachModalHeader}>
+                            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>✉ AI Outreach Generator</h3>
+                            <button onClick={() => setOutreachLead(null)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b" }}>✕</button>
                         </div>
-                    ))}
+                        <div style={{ flex: 1, overflowY: "auto" }}>
+                            <Outreach initialLead={outreachLead} />
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -379,9 +234,25 @@ const pageHeader = { display: "flex", justifyContent: "space-between", alignItem
 const pageTitle = { fontSize: "24px", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.3px" }
 const pageSub = { fontSize: "14px", color: "#64748b", marginTop: "4px" }
 
-const controls = { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", padding: "16px 20px", marginTop: "20px" }
-const filterBtns = { display: "flex", gap: "8px", flexWrap: "wrap" }
 const tableLink = { color: "#6366f1", textDecoration: "none", fontWeight: "700", cursor: "pointer", fontSize: "13px" }
 const noSite = { color: "#ef4444", fontWeight: "600", fontSize: "12px" }
 
 const emptyCard = { padding: "60px 40px", textAlign: "center", marginTop: "20px" }
+
+const outreachBtnStyle = { padding: "6px 10px", borderRadius: "6px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", transition: "all 0.2s" }
+
+const outreachModalBackdrop = {
+    position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+    background: "rgba(15, 23, 42, 0.65)", display: "flex", justifyContent: "center", alignItems: "center",
+    zIndex: 10000, padding: "20px"
+}
+const outreachModalCard = {
+    background: "#fff", borderRadius: "16px",
+    width: "100%", maxWidth: "900px", maxHeight: "90vh",
+    display: "flex", flexDirection: "column",
+    boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden"
+}
+const outreachModalHeader = {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "20px 24px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc"
+}

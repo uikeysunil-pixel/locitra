@@ -82,6 +82,7 @@ const Placeholder = ({ title }) => (
 
 const AdminRoute = lazy(() => import("./components/AdminRoute"))
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"))
+const AdminBlogWriter = lazy(() => import("./pages/AdminBlogWriter"))
 const AlertsDashboard = lazy(() => import("./pages/dashboard/AlertsDashboard"))
 
 function App() {
@@ -195,10 +196,16 @@ function App() {
             </PrivateRoute>
           } />
 
-          {/* ── Admin Hidden Route ── */}
+          {/* ── Admin Hidden Routes ── */}
           <Route path="/admin" element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          } />
+
+          <Route path="/admin/blog-writer" element={
+            <AdminRoute>
+              <AdminBlogWriter />
             </AdminRoute>
           } />
 

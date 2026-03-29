@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const publicScanController = require("../controllers/publicScan.controller");
 const publicRateLimiter = require("../middlewares/publicRateLimiter");
+const { getPublishedBlogs, getPublishedBlogBySlug } = require("../controllers/blog.controller");
 
 /**
  * Public discovery endpoint for Google Maps Rank Checker
@@ -27,5 +28,13 @@ router.get("/seo-scan/:keyword/:city", publicScanController.handleSeoScan);
  * GET /api/sitemap.xml
  */
 router.get("/sitemap.xml", publicScanController.getSitemap);
+
+/**
+ * Public Blog endpoints
+ * GET /api/blogs         → all published blogs
+ * GET /api/blogs/:slug   → single published blog by slug
+ */
+router.get("/blogs", getPublishedBlogs);
+router.get("/blogs/:slug", getPublishedBlogBySlug);
 
 module.exports = router;

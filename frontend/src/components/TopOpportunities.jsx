@@ -69,24 +69,15 @@ function OutreachModal({ lead, onClose }) {
                 <textarea
                     readOnly
                     value={email}
-                    placeholder="Click Generate to write a personalized cold email..."
+                    placeholder="Use quick email to contact this business instantly..."
                     style={modalTextarea}
                 />
 
-                <div style={modalActions}>
-                    {!email ? (
-                        <button style={btnPrimary} onClick={generate} disabled={loading}>
-                            {loading ? "Generating..." : "⚡ Generate Cold Email"}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                    {lead.email && (
+                        <button style={btnPrimary} onClick={() => window.open(`mailto:${lead.email}`)}>
+                            📧 Open Email
                         </button>
-                    ) : (
-                        <>
-                            <button style={btnSecondary} onClick={generate} disabled={loading}>
-                                {loading ? "Regenerating..." : "🔄 Regenerate"}
-                            </button>
-                            <button style={btnPrimary} onClick={copyToClipboard}>
-                                {copied ? "✅ Copied!" : "📋 Copy Email"}
-                            </button>
-                        </>
                     )}
                 </div>
             </div>
@@ -214,14 +205,16 @@ function BusinessTable({ title, subtitle, rows, icon, emptyMsg, onOutreach, onEm
                                                 🚀 Outreach
                                             </button>
 
-                                            {/* AI Outreach Email */}
-                                            <button
-                                                className="btn-primary btn-sm"
-                                                onClick={() => onEmail && onEmail(lead)}
-                                                style={actionBtnShared}
-                                            >
-                                                ✉ Email
-                                            </button>
+                                            {/* Direct Email */}
+                                            {lead.email && (
+                                                <button
+                                                    className="btn-primary btn-sm"
+                                                    onClick={() => window.open(`mailto:${lead.email}`)}
+                                                    style={actionBtnShared}
+                                                >
+                                                    ✉ Email
+                                                </button>
+                                            )}
 
                                             <button
                                                 style={{ ...crmBtnStyle(crmState[lead.name]), ...actionBtnShared }}
@@ -288,15 +281,9 @@ export default function TopOpportunities({ leads: propLeads, filteredLeads, acti
 
 
 
-    /* Build a human-readable subtitle for Table 1 */
-    const filterLabels = {
-        all: "All scanned businesses sorted by opportunity score",
-        noWebsite: "Filtered: businesses without a website",
-        lowReviews: "Filtered: businesses with fewer than 30 reviews",
-        lowRating: "Filtered: businesses with rating below 4.0",
-        highOpportunity: "Filtered: high opportunity score (≥ 70)",
-    }
-    const table1Sub = filterLabels[activeFilter] ?? filterLabels.all
+    const table1Sub = activeFilter && activeFilter !== "all" && activeFilter !== "All" 
+        ? `Filtered by Opportunity: ${activeFilter}`
+        : "All scanned businesses sorted by opportunity score"
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>

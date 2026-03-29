@@ -77,12 +77,14 @@ export default function TopOpportunitiesToday({ leads, onOutreach, onEmail, onCo
                                     >
                                         🚀 Outreach
                                     </button>
-                                    <button
-                                        style={actionBtnStyle}
-                                        onClick={() => onEmail && onEmail(lead)}
-                                    >
-                                        ✉ Email
-                                    </button>
+                                    {lead.email && (
+                                        <button
+                                            style={actionBtnStyle}
+                                            onClick={() => window.open(`mailto:${lead.email}`)}
+                                        >
+                                            ✉ Email
+                                        </button>
+                                    )}
                                     <button
                                         style={actionBtnStyle}
                                         onClick={() => onCopy && onCopy(lead)}

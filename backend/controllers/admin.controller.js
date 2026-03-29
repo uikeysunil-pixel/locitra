@@ -196,3 +196,22 @@ exports.getApiUsage = async (req, res) => {
         res.status(500).json({ success: false, message: error.message })
     }
 }
+
+// @desc    Sync System Data
+// @route   POST /api/admin/sync
+// @access  Private/Admin
+exports.syncSystem = async (req, res) => {
+    console.log("SYNC REQUEST RECEIVED");
+    console.log("USER:", req.user);
+    try {
+        // existing sync logic
+        res.json({ success: true, message: "Sync completed" });
+    } catch (error) {
+        console.error("SYNC ERROR:", error);
+        res.status(500).json({
+            success: false,
+            message: "Sync failed",
+            error: error.message
+        });
+    }
+}

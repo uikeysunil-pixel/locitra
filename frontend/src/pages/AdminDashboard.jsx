@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import useAuthStore from "../store/authStore"
 
@@ -21,13 +22,16 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
     })
 
+    const navigate = useNavigate()
+
     const views = [
         { id: "overview", label: "Admin Dashboard", icon: "📊" },
         { id: "users", label: "Users", icon: "👥" },
         { id: "plans", label: "Plans", icon: "💳" },
         { id: "scans", label: "Scans", icon: "🔍" },
         { id: "cache", label: "Cache", icon: "🧊" },
-        { id: "api-usage", label: "API Usage", icon: "⚡" }
+        { id: "api-usage", label: "API Usage", icon: "⚡" },
+        { id: "blog-writer", label: "Blog Writer", icon: "✍️" }
     ]
 
     useEffect(() => {
@@ -91,6 +95,27 @@ const AdminDashboard = () => {
         } catch (err) { alert("Cache removal failed") }
     }
 
+    const showSuccess = (msg) => alert(msg);
+    const showError = (msg) => alert(msg);
+
+    const handleSync = async () => {
+        try {
+            const res = await axios.post("/api/admin/sync", {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            if (res.data.success) {
+                showSuccess("Sync completed");
+                fetchAllData();
+            } else {
+                showError(res.data.message);
+            }
+        } catch (err) {
+            showError(err.response?.data?.message || "Network Error");
+        }
+    }
+
     // ── Render Utilities ──────────────────────────────────────
 
     const Card = ({ title, value, sub, icon, trend }) => (
@@ -146,7 +171,7 @@ const AdminDashboard = () => {
                     <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#1e293b" }}>
                         {views.find(v => v.id === activeView)?.label}
                     </h2>
-                    <button onClick={fetchAllData} style={styles.refreshBtn}>
+                    <button onClick={handleSync} style={styles.refreshBtn}>
                         Sync Data
                     </button>
                 </header>
@@ -163,6 +188,17 @@ const AdminDashboard = () => {
                                     <Card title="Total Scans" value={data.stats.totalScans} sub="Audit log entries" icon="🔍" />
                                     <Card title="Serp Usage (24h)" value={data.stats.serpCallsToday} sub="Calls to SerpAPI" icon="⚡" />
                                     <Card title="Cache Hit Rate" value={`${data.stats.cacheHitRate}%`} sub="Last 100 scans" icon="🧊" />
+                                    {/* Blog Writer quick-access card */}
+                                    <div style={{ ...styles.card, cursor: "pointer", border: "1px solid #6366f1", background: "linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08))" }} onClick={() => navigate("/admin/blog-writer")}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                            <div>
+                                                <div style={styles.cardTitle}>AI Blog Writer</div>
+                                                <div style={{ fontSize: "22px", fontWeight: "800", color: "#6366f1" }}>✍️</div>
+                                                <div style={styles.cardSub}>Generate &amp; publish SEO blogs with AI</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ marginTop: "12px", fontSize: "12px", fontWeight: "700", color: "#6366f1" }}>Open Blog Writer →</div>
+                                    </div>
                                 </div>
                             )}
 
@@ -324,6 +360,18 @@ const AdminDashboard = () => {
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+                            )}
+                            {activeView === "blog-writer" && (
+                                <div style={styles.card}>
+                                    <h3 style={styles.cardTitle}>AI Blog Writer</h3>
+                                    <p style={{ color: "#64748b", fontSize: "14px", marginTop: "8px" }}>Create, edit and publish SEO-optimized blog articles using AI.</p>
+                                    <button
+                                        onClick={() => navigate("/admin/blog-writer")}
+                                        style={{ marginTop: "16px", padding: "10px 20px", background: "#6366f1", color: "#fff", border: "none", borderRadius: "8px", fontWeight: "700", fontSize: "14px", cursor: "pointer" }}
+                                    >
+                                        ✍️ Open Blog Writer
+                                    </button>
                                 </div>
                             )}
                         </>

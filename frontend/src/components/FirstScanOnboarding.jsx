@@ -1,10 +1,14 @@
 import { useState } from "react"
 import { scanMarket } from "../services/api"
 import { useMarketStore } from "../store/marketStore"
+import useAuthStore from "../store/authStore"
+import { useNavigate } from "react-router-dom"
 
 export default function FirstScanOnboarding({ onScanComplete }) {
 
     const { setBusinesses, clearBusinesses } = useMarketStore()
+    const { user, updateUser } = useAuthStore()
+    const navigate = useNavigate()
 
     const [city, setCity] = useState("")
     const [keyword, setKeyword] = useState("")
@@ -64,6 +68,13 @@ export default function FirstScanOnboarding({ onScanComplete }) {
 
             if (onScanComplete) onScanComplete(results)
 
+            if (!response.data?.fromCache) {
+                // If it wasn't a cache hit, we likely consumed a credit
+                if (user && typeof user.credits === "number" && user.credits > 0) {
+                    updateUser({ credits: user.credits - 1 })
+                }
+            }
+
         } catch (err) {
             console.error("[Onboarding] error:", err)
             setError("Scan failed. Please try again.")
@@ -72,7 +83,7 @@ export default function FirstScanOnboarding({ onScanComplete }) {
         }
     }
 
-    const handleKeyDown = (e) => { if (e.key === "Enter") handleScan() }
+    const handleKeyDown = (e) => { if (e.key === "Enter" && (!user || user.credits > 0)) handleScan() }
 
     return (
         <div style={panel}>
@@ -97,18 +108,29 @@ export default function FirstScanOnboarding({ onScanComplete }) {
                     onKeyDown={handleKeyDown}
                     placeholder="Chicago, Austin, Dallas, Miami"
                 />
-                <button style={scanBtn} disabled={loading} onClick={() => handleScan(keyword, city)}>
+                <button style={{ ...scanBtn, opacity: (user && user.credits <= 0) ? 0.5 : 1 }} disabled={loading || (user && user.credits <= 0)} onClick={() => handleScan(keyword, city)}>
                     {loading ? "Scanning..." : "Scan Market"}
                 </button>
             </div>
 
+            {user && user.credits > 0 && (
+                 <div style={{ fontSize: "11px", color: "#64748b", marginTop: "-16px", marginBottom: "16px", fontWeight: "600" }}>
+                     Credits left: {user.credits} <span style={{ opacity: 0.6 }}>(1 scan = 1 credit)</span>
+                 </div>
+            )}
+            {user && user.credits <= 0 && !error && (
+                 <div style={{ color: "#9a3412", background: "#fff7ed", border: "1px solid #fdba74", padding: "10px", borderRadius: "8px", marginBottom: "16px", fontSize: "14px", display: "inline-block" }}>
+                     <span>⚠️</span> You have exhausted your credits. <button onClick={() => navigate("/pricing")} style={{ background: "none", border: "none", color: "#ea580c", fontWeight: "700", cursor: "pointer", textDecoration: "underline", padding: 0 }}>Upgrade your plan</button> to continue.
+                 </div>
+            )}
+
             <div style={quickStartWrap}>
                 <span style={qsLabel}>Try one of these markets:</span>
                 <div style={qsButtons}>
-                    <button style={qsBtn} onClick={() => handleQuickStart("Dentist", "Chicago")} disabled={loading}>• Dentist – Chicago</button>
-                    <button style={qsBtn} onClick={() => handleQuickStart("Plumber", "Austin")} disabled={loading}>• Plumber – Austin</button>
-                    <button style={qsBtn} onClick={() => handleQuickStart("Roofing", "Dallas")} disabled={loading}>• Roofing – Dallas</button>
-                    <button style={qsBtn} onClick={() => handleQuickStart("Restaurant", "Miami")} disabled={loading}>• Restaurant – Miami</button>
+                    <button style={qsBtn} onClick={() => handleQuickStart("Dentist", "Chicago")} disabled={loading || (user && user.credits <= 0)}>• Dentist – Chicago</button>
+                    <button style={qsBtn} onClick={() => handleQuickStart("Plumber", "Austin")} disabled={loading || (user && user.credits <= 0)}>• Plumber – Austin</button>
+                    <button style={qsBtn} onClick={() => handleQuickStart("Roofing", "Dallas")} disabled={loading || (user && user.credits <= 0)}>• Roofing – Dallas</button>
+                    <button style={qsBtn} onClick={() => handleQuickStart("Restaurant", "Miami")} disabled={loading || (user && user.credits <= 0)}>• Restaurant – Miami</button>
                 </div>
             </div>
 

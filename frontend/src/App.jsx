@@ -118,83 +118,20 @@ function App() {
           {/* ── Protected dashboard routes ── */}
           <Route path="/app" element={
             <PrivateRoute>
-              <Layout>
-                <Dashboard />
-              </Layout>
+              <Layout />
             </PrivateRoute>
-          } />
-
-          <Route path="/leads" element={
-            <PrivateRoute>
-              <Layout>
-                <LeadGenerator />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/dashboard/opportunity-heatmap" element={
-            <PrivateRoute>
-              <Layout>
-                <OpportunityHeatmap />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/dashboard/tools/website-presence" element={
-            <PrivateRoute>
-              <Layout>
-                <WebsitePresenceTool />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/crm" element={
-            <PrivateRoute>
-              <Layout>
-                <LeadManager />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/outreach" element={
-            <PrivateRoute>
-              <Layout>
-                <Outreach />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/reports" element={
-            <PrivateRoute>
-              <Layout>
-                <Reports />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/billing" element={
-            <PrivateRoute>
-              <Layout>
-                <Billing />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/dashboard/market-gaps" element={
-            <PrivateRoute>
-              <Layout>
-                <MarketGaps />
-              </Layout>
-            </PrivateRoute>
-          } />
-
-          <Route path="/alerts" element={
-            <PrivateRoute>
-              <Layout>
-                <AlertsDashboard />
-              </Layout>
-            </PrivateRoute>
-          } />
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="leads" element={<LeadGenerator />} />
+            <Route path="opportunity-heatmap" element={<OpportunityHeatmap />} />
+            <Route path="tools/website-presence" element={<WebsitePresenceTool />} />
+            <Route path="crm" element={<LeadManager />} />
+            <Route path="outreach" element={<Outreach />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="market-gaps" element={<MarketGaps />} />
+            <Route path="alerts" element={<AlertsDashboard />} />
+          </Route>
 
           {/* ── Admin Hidden Routes ── */}
           <Route path="/admin" element={

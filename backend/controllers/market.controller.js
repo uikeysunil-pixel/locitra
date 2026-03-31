@@ -49,9 +49,9 @@ const setCache = (key, data) => {
 // ─────────────────────────────────────────────
 exports.scanMarket = async (req, res) => {
     try {
-        const { keyword, location } = req.body
+        const { keyword, location, forceRefresh } = req.body
 
-        console.log("[scanMarket] SCAN REQUEST:", { keyword, location })
+        console.log("[scanMarket] SCAN REQUEST:", { keyword, location, forceRefresh })
 
         if (!keyword || !location) {
             return res.status(400).json({
@@ -65,37 +65,45 @@ exports.scanMarket = async (req, res) => {
         const userId = req.user ? req.user.id : null
 
         // 1. SESSION CACHE CHECK (Fastest)
-        const sessionCached = getCache(cacheKey)
-        if (sessionCached) {
-            console.log("[scanMarket] Returning session-cached result:", cacheKey)
-            res.json({ ...sessionCached, fromCache: true, cacheSource: "session" })
+        if (!forceRefresh) {
+            const sessionCached = getCache(cacheKey)
+            if (sessionCached) {
+                console.log("[scanMarket] Returning session-cached result:", cacheKey)
+                res.json({ ...sessionCached, fromCache: true, cacheSource: "session" })
 
-            // Trigger alert generation asynchronously after response
-            setImmediate(() => {
-                try {
-                    locitraEvents.emit("scanCompleted", {
-                        businesses: sessionCached.businesses,
-                        userId,
-                        keyword: normalizedKeyword,
-                        location: normalizedLocation
-                    })
-                } catch (err) {
-                    console.error("[scanMarket] Event emission error (session cache):", err)
-                }
-            })
-            return
+                // Trigger alert generation asynchronously after response
+                setImmediate(() => {
+                    try {
+                        locitraEvents.emit("scanCompleted", {
+                            businesses: sessionCached.businesses,
+                            userId,
+                            keyword: normalizedKeyword,
+                            location: normalizedLocation
+                        })
+                    } catch (err) {
+                        console.error("[scanMarket] Event emission error (session cache):", err)
+                    }
+                })
+                return
+            }
         }
 
         // 2. MONGODB CACHE CHECK (Persistent)
-        console.log("[scanMarket] Checking MongoDB cache for:", { keyword: normalizedKeyword, location: normalizedLocation })
-        let dbCached = await Business.find({
-            keyword: normalizedKeyword,
-            location: normalizedLocation
-        }).lean()
+        if (!forceRefresh) {
+            console.log("[scanMarket] Checking MongoDB cache for:", { keyword: normalizedKeyword, location: normalizedLocation })
+            let dbCached = await Business.find({
+                keyword: normalizedKeyword,
+                location: normalizedLocation
+            }).lean()
 
-        if (dbCached && dbCached.length > 0) {
-            dbCached = applyContactFallbackArray(dbCached);
-            console.log(`[scanMarket] Cache hit! Found ${dbCached.length} businesses in MongoDB.`)
+            if (dbCached && dbCached.length > 0) {
+                // RULE 1: Cache Expiry (7 days for testing/quota preservation)
+                const firstRecord = dbCached[0]
+                const isExpired = firstRecord.updatedAt && (Date.now() - new Date(firstRecord.updatedAt).getTime() > 7 * 24 * 60 * 60 * 1000)
+
+                if (!isExpired) {
+                    dbCached = applyContactFallbackArray(dbCached);
+                    console.log(`[scanMarket] Cache hit! Found ${dbCached.length} businesses in MongoDB (Not Expired).`)
             
             // ... (metrics calculation) ...
             let totalReviews = 0
@@ -145,22 +153,28 @@ exports.scanMarket = async (req, res) => {
                 resultsCount: dbCached.length
             })
 
-            res.json({ ...payload, fromCache: true, cacheSource: "mongodb" })
+                res.json({ ...payload, fromCache: true, cacheSource: "mongodb", lastUpdated: firstRecord.updatedAt })
 
-            // Trigger alert generation asynchronously after response
-            setImmediate(() => {
-                try {
-                    locitraEvents.emit("scanCompleted", {
-                        businesses: dbCached,
-                        userId,
-                        keyword: normalizedKeyword,
-                        location: normalizedLocation
-                    })
-                } catch (err) {
-                    console.error("[scanMarket] Event emission error (db cache):", err)
+                // Trigger alert generation asynchronously after response
+                setImmediate(() => {
+                    try {
+                        locitraEvents.emit("scanCompleted", {
+                            businesses: dbCached,
+                            userId,
+                            keyword: normalizedKeyword,
+                            location: normalizedLocation
+                        })
+                    } catch (err) {
+                        console.error("[scanMarket] Event emission error (db cache):", err)
+                    }
+                })
+                return
+                } else {
+                    console.log(`[scanMarket] Cache older than 7 days. Bypassing...`)
                 }
-            })
-            return
+            } else {
+                console.log(`[scanMarket] Cache not found. Bypassing...`)
+            }
         }
 
         // 3. LIVE SCAN (SerpAPI)
@@ -245,12 +259,15 @@ exports.scanMarket = async (req, res) => {
             }
         }
 
-        // Increment scan usage
-        if (req.user) {
-            const user = await User.findById(req.user.id)
+        // Deduct scan credit
+        if (req.dbUser) {
+            req.dbUser.credits = Math.max(0, (req.dbUser.credits || 0) - 1);
+            await req.dbUser.save();
+        } else if (req.user) {
+            const user = await User.findById(req.user.id);
             if (user) {
-                user.dailyScanUsed = (user.dailyScanUsed || 0) + 1
-                await user.save()
+                user.credits = Math.max(0, (user.credits || 0) - 1);
+                await user.save();
             }
         }
 

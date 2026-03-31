@@ -1,10 +1,14 @@
 import { useState } from "react"
 import { scanMarket } from "../services/api"
 import { useMarketStore } from "../store/marketStore"
+import useAuthStore from "../store/authStore"
+import { useNavigate } from "react-router-dom"
 
 export default function CityScanner({ onScanComplete }) {
 
     const { setBusinesses, clearBusinesses } = useMarketStore()
+    const { user, updateUser } = useAuthStore()
+    const navigate = useNavigate()
 
     const [city, setCity] = useState("")
     const [keyword, setKeyword] = useState("dentist")
@@ -12,6 +16,7 @@ export default function CityScanner({ onScanComplete }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [scanned, setScanned] = useState(false)
+    const [cacheInfo, setCacheInfo] = useState(null)
 
     /* ── helpers ────────────────────────────────────── */
 
@@ -27,7 +32,7 @@ export default function CityScanner({ onScanComplete }) {
 
     /* ── scan ───────────────────────────────────────── */
 
-    const handleScan = async () => {
+    const handleScan = async (forceRefresh = false) => {
 
         if (!city.trim()) { alert("Please enter a city"); return }
         if (!keyword.trim()) { alert("Please enter a keyword"); return }
@@ -36,11 +41,12 @@ export default function CityScanner({ onScanComplete }) {
 
             setLoading(true)
             setError(null)
+            setCacheInfo(null)
             clearBusinesses()
             setLeads([])
             setScanned(false)
 
-            const response = await scanMarket(keyword.trim(), city.trim())
+            const response = await scanMarket(keyword.trim(), city.trim(), forceRefresh)
 
             if (!response.success) {
                 throw new Error(response.error || "Scan failed")
@@ -69,6 +75,15 @@ export default function CityScanner({ onScanComplete }) {
 
             if (onScanComplete) onScanComplete(results)
 
+            if (response.data?.fromCache) {
+                 setCacheInfo({ lastUpdated: response.data.lastUpdated || null, source: response.data.cacheSource })
+            } else {
+                // If it wasn't a cache hit, we likely consumed a credit
+                if (user && typeof user.credits === "number" && user.credits > 0) {
+                    updateUser({ credits: user.credits - 1 })
+                }
+            }
+
         } catch (err) {
             console.error("[CityScanner] error:", err)
             setError("Scan failed — please check your keyword and city and try again.")
@@ -78,7 +93,7 @@ export default function CityScanner({ onScanComplete }) {
 
     }
 
-    const handleKeyDown = (e) => { if (e.key === "Enter") handleScan() }
+    const handleKeyDown = (e) => { if (e.key === "Enter" && (!user || user.credits > 0)) handleScan(false) }
 
     /* ── render ─────────────────────────────────────── */
 
@@ -129,23 +144,51 @@ export default function CityScanner({ onScanComplete }) {
                     <label style={{ ...label, opacity: 0 }}>Go</label>
                     <button
                         className="btn-primary"
-                        onClick={handleScan}
-                        disabled={loading}
-                        style={scanBtn}
+                        onClick={() => handleScan(false)}
+                        disabled={loading || (user && user.credits <= 0)}
+                        style={{ ...scanBtn, opacity: (user && user.credits <= 0) ? 0.5 : 1 }}
                     >
                         {loading
                             ? <><span style={spinner} />Scanning…</>
                             : "⚡ Scan Market"
                         }
                     </button>
+                    {user && (
+                        <div style={{ fontSize: "11px", color: user.credits <= 0 ? "#ef4444" : "#64748b", marginTop: "4px", fontWeight: "600", textAlign: "right" }}>
+                            {user.credits > 0 ? (
+                                <>Credits left: {user.credits} <span style={{ opacity: 0.6 }}>(1 scan = 1 credit)</span></>
+                            ) : (
+                                <span style={{ color: "#ef4444" }}>No credits left</span>
+                            )}
+                        </div>
+                    )}
                 </div>
 
             </div>
 
-            {/* Error */}
+            {/* Error or No Credits handling */}
+            {user && user.credits <= 0 && !error && (
+                 <div style={{ ...errorBox, background: "#fff7ed", color: "#9a3412" }}>
+                     <span>⚠️</span> You have exhausted your credits. <button onClick={() => navigate("/pricing")} style={{ background: "none", border: "none", color: "#ea580c", fontWeight: "700", cursor: "pointer", textDecoration: "underline", padding: 0 }}>Upgrade your plan</button> to continue scanning.
+                 </div>
+            )}
             {error && (
                 <div style={errorBox}>
                     <span>⚠️</span> {error}
+                </div>
+            )}
+
+            {/* Cache info row */}
+            {cacheInfo && !loading && (
+                <div style={{ marginTop: "16px", padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: "8px", fontSize: "14px", display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>✅ Showing cached results {cacheInfo.lastUpdated ? `(last updated ${new Date(cacheInfo.lastUpdated).toLocaleDateString()})` : ""}</span>
+                    <button 
+                         onClick={() => handleScan(true)}
+                         disabled={loading || (user && user.credits <= 0)}
+                         style={{ background: "#fff", border: "1px solid #166534", color: "#166534", padding: "6px 12px", borderRadius: "6px", fontSize: "13px", fontWeight: "600", cursor: "pointer", opacity: (user && user.credits <= 0) ? 0.5 : 1 }}
+                    >
+                         🔄 Refresh Data (uses 1 credit)
+                    </button>
                 </div>
             )}
 

@@ -13,7 +13,8 @@ const useAuthStore = create(
                     email: data.email,
                     companyName: data.companyName,
                     plan: data.plan,
-                    role: data.role
+                    role: data.role,
+                    credits: data.credits
                 },
                 token: data.token
             }),
@@ -22,6 +23,10 @@ const useAuthStore = create(
 
             updatePlan: (plan) => set((state) => ({
                 user: state.user ? { ...state.user, plan } : null
+            })),
+
+            updateUser: (updates) => set((state) => ({
+                user: state.user ? { ...state.user, ...updates } : null
             }))
         }),
         {

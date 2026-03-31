@@ -34,12 +34,13 @@ const userSchema = new mongoose.Schema(
         registerIP: {
             type: String
         },
-        dailyScanUsed: {
+        credits: {
             type: Number,
             default: 0
         },
-        scanResetDate: {
-            type: Date
+        lastCreditReset: {
+            type: Date,
+            default: Date.now
         },
         role: {
             type: String,

@@ -150,7 +150,7 @@ function RecentOpportunitiesWidget() {
                     </p>
                 </div>
             </div>
-            <Link to="/alerts" className="btn-primary" style={{ textDecoration: "none", fontSize: "13px", padding: "8px 16px" }}>
+            <Link to="/app/alerts" className="btn-primary" style={{ textDecoration: "none", fontSize: "13px", padding: "8px 16px" }}>
                 View Alerts
             </Link>
         </div>

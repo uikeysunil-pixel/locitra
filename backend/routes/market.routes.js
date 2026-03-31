@@ -7,7 +7,7 @@ const {
 } = require("../controllers/market.controller")
 
 const { protect } = require("../middlewares/auth.middleware")
-const scanLimit = require("../middlewares/scanLimit")
+const { checkCredits } = require("../middlewares/creditMiddleware")
 
 router.get("/history", getMarketHistory)
 router.get("/business/:id", protect, (req, res, next) => {
@@ -16,7 +16,6 @@ router.get("/business/:id", protect, (req, res, next) => {
     return getBusinessById(req, res, next)
 })
 
-// Protected scan route: Must be logged in + checks daily limit tier
-router.post("/scan", protect, scanLimit, scanMarket)
+router.post("/scan", protect, checkCredits, scanMarket)
 
 module.exports = router

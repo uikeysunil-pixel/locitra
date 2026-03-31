@@ -126,7 +126,7 @@ Opportunity: ${alert.opportunityScore}`;
                                 <button onClick={() => copyLead(alert)} className="btn-ghost" style={actionBtn}>
                                     📋 Copy Data
                                 </button>
-                                <Link to="/leads" className="btn-primary" style={{ ...actionBtn, textDecoration: "none", textAlign: "center" }}>
+                                <Link to="/app/leads" className="btn-primary" style={{ ...actionBtn, textDecoration: "none", textAlign: "center" }}>
                                     🎯 View in Leads
                                 </Link>
                             </div>

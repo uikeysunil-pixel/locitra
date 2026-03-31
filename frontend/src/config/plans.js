@@ -2,10 +2,11 @@ export const plans = [
     {
         name: "Free",
         price: 0,
-        scansPerDay: 2,
+        scansPerDay: 10,
         businesses: 100,
         features: [
-            "2 scans per day",
+            "10 credits per day",
+            "1 credit = 1 scan",
             "Up to 100 businesses per scan",
             "Basic AI analysis"
         ],
@@ -16,11 +17,11 @@ export const plans = [
     {
         name: "Starter",
         price: 49,
-        scansPerDay: 20,
-        businesses: 500,
+        scansPerDay: 300,
+        businesses: 300,
         features: [
-            "20 scans per day",
-            "Up to 500 businesses per scan",
+            "300 credits per month",
+            "Up to 300 businesses per scan",
             "Full AI analysis",
             "Lead CRM access"
         ],
@@ -32,11 +33,11 @@ export const plans = [
     {
         name: "Agency",
         price: 99,
-        scansPerDay: "Unlimited",
-        businesses: "500+",
+        scansPerDay: 1000,
+        businesses: 500,
         features: [
-            "Unlimited scans",
-            "500+ businesses per scan",
+            "1000 credits per month",
+            "Up to 500 businesses per scan",
             "AI outreach generator",
             "Lead CRM",
             "Full analytics"

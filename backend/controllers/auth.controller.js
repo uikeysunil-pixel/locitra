@@ -111,6 +111,7 @@ exports.registerUser = async (req, res, next) => {
                 companyName: user.companyName,
                 plan: user.plan,
                 role: user.role,
+                credits: user.credits,
                 token: generateToken(user._id)
             }
         })
@@ -202,6 +203,7 @@ exports.loginUser = async (req, res, next) => {
                 companyName: user.companyName,
                 plan: user.plan,
                 role: user.role,
+                credits: user.credits,
                 token: generateToken(user._id)
             }
         })
@@ -240,7 +242,7 @@ exports.getMe = async (req, res, next) => {
 
         return res.json({
             success: true,
-            user
+            user: { ...user.toObject(), credits: user.credits }
         })
 
     } catch (error) {

@@ -356,7 +356,7 @@ const AdminDashboard = () => {
                                         {["free", "starter", "agency"].map(plan => (
                                             <div key={plan} style={{ padding: "16px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between" }}>
                                                 <span style={{ fontWeight: "700", textTransform: "capitalize" }}>{plan}</span>
-                                                <span style={{ color: "#64748b" }}>Unlimited Export • {plan === 'free' ? '2' : plan === 'starter' ? '20' : '∞'} Scans/Day</span>
+                                                <span style={{ color: "#64748b" }}>Unlimited Export • {plan === 'free' ? '10 credits/day' : plan === 'starter' ? '300 credits/month' : '1000 credits/month'}</span>
                                             </div>
                                         ))}
                                     </div>

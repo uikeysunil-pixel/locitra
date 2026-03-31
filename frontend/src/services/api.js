@@ -163,7 +163,7 @@ export const fetchMarketHistory = (keyword, location) =>
 
 /* ---------------- Market Scanner ---------------- */
 
-export const scanMarket = async (keyword, location) => {
+export const scanMarket = async (keyword, location, forceRefresh = false) => {
     // Normalize input
     const normalizedKeyword = (keyword || "").toLowerCase().trim()
     const normalizedLocation = (location || "").toLowerCase().trim()
@@ -173,7 +173,7 @@ export const scanMarket = async (keyword, location) => {
         {},
         {
             method: "POST",
-            body: { keyword: normalizedKeyword, location: normalizedLocation }
+            body: { keyword: normalizedKeyword, location: normalizedLocation, forceRefresh }
         }
     )
 }

@@ -40,7 +40,7 @@ export default function HeatmapPreview({ businesses = [] }) {
         <div className="card" style={container}>
             <div style={header}>
                 <h3 style={title}>🗺️ Market Heatmap Preview</h3>
-                <Link to="/dashboard/opportunity-heatmap" style={viewAll}>
+                <Link to="/app/opportunity-heatmap" style={viewAll}>
                     Full View <ChevronRight size={14} />
                 </Link>
             </div>
@@ -61,7 +61,7 @@ export default function HeatmapPreview({ businesses = [] }) {
                 ))}
             </div>
 
-            <Link to="/dashboard/opportunity-heatmap" style={ctaBtn}>
+            <Link to="/app/opportunity-heatmap" style={ctaBtn}>
                 Launch Full Heatmap Analyzer
             </Link>
         </div>

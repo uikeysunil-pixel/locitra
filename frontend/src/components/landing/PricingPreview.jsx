@@ -63,6 +63,10 @@ export default function PricingPreview() {
                     ))}
                 </div>
 
+                <div className="text-center mt-8 text-slate-500 font-medium">
+                    <p>1 scan = 1 credit. Credits reset automatically based on your billing cycle.</p>
+                </div>
+
             </div>
         </section>
     );

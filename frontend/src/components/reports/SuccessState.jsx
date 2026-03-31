@@ -189,7 +189,7 @@ const SuccessState = ({ shareUrl, onDownloadPDF, onCopyLink, onSendEmail }) => {
                 <p className="text-white/60 font-bold mb-6 relative z-10">Upgrade now to unlock unlimited reports and premium insights.</p>
                 
                 <Link 
-                    to="/billing"
+                    to="/app/billing"
                     className="inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-2xl font-black hover:bg-slate-50 transition-all shadow-xl hover:-translate-y-1 relative z-10"
                 >
                     <span>Upgrade to Starter</span>

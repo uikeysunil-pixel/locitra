@@ -8,7 +8,7 @@ const PLANS = [
         price: null,
         icon: "🆓",
         color: "#6366f1",
-        features: ["2 scans / day", "100 businesses / scan", "CSV export", "Contact Info popup"]
+        features: ["10 credits / day", "1 credit = 1 scan", "100 businesses / scan", "CSV export", "Contact Info popup"]
     },
     {
         id: "starter",
@@ -17,7 +17,7 @@ const PLANS = [
         icon: "🚀",
         color: "#0ea5e9",
         badge: "Most Popular",
-        features: ["20 scans / day", "500 businesses / scan", "Lead CRM", "AI Outreach Generator", "White-label PDF Reports"]
+        features: ["300 credits / month", "500 businesses / scan", "Lead CRM", "AI Outreach Generator", "White-label PDF Reports"]
     },
     {
         id: "agency",
@@ -25,7 +25,7 @@ const PLANS = [
         price: 99,
         icon: "🏢",
         color: "#8b5cf6",
-        features: ["Unlimited scans", "500+ businesses / scan", "Everything in Starter", "Priority support", "Team seats (coming soon)"]
+        features: ["1000 credits / month", "500+ businesses / scan", "Everything in Starter", "Priority support", "Team seats (coming soon)"]
     }
 ]
 
@@ -85,7 +85,7 @@ export default function Billing() {
 
             <div style={header}>
                 <h2 style={heading}>💳 Plans & Billing</h2>
-                <p style={sub}>Upgrade your plan to unlock unlimited scans and AI features</p>
+                <p style={sub}>Upgrade your plan to unlock more credits and AI features</p>
                 {user?.plan && (
                     <span style={currentPlanBadge}>
                         Current plan: <strong>{user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}</strong>

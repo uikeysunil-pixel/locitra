@@ -1,19 +1,19 @@
-import { Link, useLocation } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import { useEffect, useState } from "react"
 import useAuthStore from "../store/authStore"
 
 const NAV_MAIN = [
     { to: "/app", icon: "⬛", label: "Dashboard" },
-    { to: "/leads", icon: "🚀", label: "Lead Generator" },
-    { to: "/dashboard/market-gaps", icon: "📈", label: "Market Gaps" },
-    { to: "/alerts", icon: "🔔", label: "Alerts" },
+    { to: "/app/leads", icon: "🚀", label: "Lead Generator" },
+    { to: "/app/market-gaps", icon: "📈", label: "Market Gaps" },
+    { to: "/app/alerts", icon: "🔔", label: "Alerts" },
 ]
 
 const NAV_MANAGEMENT = [
-    { to: "/crm", icon: "📋", label: "Lead CRM" },
-    { to: "/outreach", icon: "✉", label: "Outreach" },
-    { to: "/reports", icon: "📊", label: "Reports" },
-    { to: "/billing", icon: "💳", label: "Billing" },
+    { to: "/app/crm", icon: "📋", label: "Lead CRM" },
+    { to: "/app/outreach", icon: "✉", label: "Outreach" },
+    { to: "/app/reports", icon: "📊", label: "Reports" },
+    { to: "/app/billing", icon: "💳", label: "Billing" },
 ]
 
 const NAV_SEO_TOOLS = [
@@ -22,7 +22,7 @@ const NAV_SEO_TOOLS = [
     { to: "/tools/local-competitor-finder", icon: "🔍", label: "Comp Finder" },
     { to: "/tools/review-gap-analyzer", icon: "⭐", label: "Review Gap" },
     { to: "/tools/local-opportunity-finder", icon: "💡", label: "Opp Finder" },
-    { to: "/dashboard/tools/website-presence", icon: "🌐", label: "Presence Checker" },
+    { to: "/app/tools/website-presence", icon: "🌐", label: "Presence Checker" },
 ]
 
 export default function Sidebar() {
@@ -53,21 +53,28 @@ export default function Sidebar() {
         // Poll every 5 minutes for new alerts
         const interval = setInterval(fetchUnread, 1000 * 60 * 5)
         return () => clearInterval(interval)
-    }, [token, pathname])
+    }, [token])
 
     const NavItem = ({ to, icon, label }) => {
-        const active = pathname === to
         const hasAlerts = label === "Alerts" && unreadCount > 0
         return (
             <li key={to}>
-                <Link to={to} style={{ ...itemStyle, ...(active ? activeStyle : {}) }}>
-                    <span style={iconStyle}>{icon}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        {label}
-                        {hasAlerts && <span title={`${unreadCount} new opportunities`} style={notificationDot} />}
-                    </span>
-                    {active && <span style={activeDot} />}
-                </Link>
+                <NavLink 
+                    to={to} 
+                    end={to === "/app"}
+                    style={({ isActive }) => ({ ...itemStyle, ...(isActive ? activeStyle : {}) })}
+                >
+                    {({ isActive }) => (
+                        <>
+                            <span style={iconStyle}>{icon}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                {label}
+                                {hasAlerts && <span title={`${unreadCount} new opportunities`} style={notificationDot} />}
+                            </span>
+                            {isActive && <span style={activeDot} />}
+                        </>
+                    )}
+                </NavLink>
             </li>
         )
     }

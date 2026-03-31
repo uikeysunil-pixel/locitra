@@ -1,14 +1,15 @@
 import Sidebar from "./Sidebar"
 import CommandPalette from "./ui/CommandPalette"
+import { Outlet } from "react-router-dom"
 
-export default function Layout({ children }) {
+export default function Layout() {
     return (
         <div style={appLayout}>
             <CommandPalette />
             <Sidebar />
             <div style={mainArea}>
                 <main style={content}>
-                    {children}
+                    <Outlet />
                 </main>
             </div>
         </div>
